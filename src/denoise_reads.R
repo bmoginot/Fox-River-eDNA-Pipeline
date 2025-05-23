@@ -1,0 +1,67 @@
+library(dada2); packageVersion("dada2")
+
+setwd("c:/Users/bmogi/OneDrive/Documents/UniDocs/MS Thesis/")
+
+"\\wsl.localhost\Ubuntu\home\bmogi\FoxRiver\dada2\trimmed_reads"
+
+path <- "dada2.lnk/trimmed_reads" # locate data
+list.files(path)
+
+# divide forward and reverse reads and get sample names
+fnFs <- sort(list.files(path, pattern="_R1_001-subset-trimmed.fastq", full.names = TRUE)) # check if my file names are in the same format
+fnRs <- sort(list.files(path, pattern="_R2_001-subset-trimmed.fastq", full.names = TRUE))
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1) # uses firsts field of fq file name
+
+# get quality of reads
+plotQualityProfile(fnFs[1:2])
+plotQualityProfile(fnRs[1:2])
+# quality falls off precipitously around the same position for the forward and reverse reads. reverse reads however are worse earlier, expectedly.
+
+# Place filtered files in filtered/ subdirectory
+filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(140,140),
+                     maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+                     compress=TRUE, multithread=FALSE)
+head(out)
+# lost a few hundred reads, everything seems to be in order here
+
+# learn error rates
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+plotErrors(errF, nominalQ=TRUE)
+# yeah i think these look fine
+
+
+# sample inference
+dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
+dadaRs <- dada(filtRs, err=errR, multithread=TRUE)
+dadaFs[[1]] # dada class objects contain many diagnostics that can be interrogated further
+
+# merge
+mergers <- mergePairs(dadaFs, filtFs, dadaRs, filtRs, verbose=TRUE)
+head(mergers[[1]]) # merge objects are lists of dataframes with information about each merge. make sure most reads successfully merge
+
+# construct sequence table
+seqtab <- makeSequenceTable(mergers)
+dim(seqtab) # how many asvs are there?
+table(nchar(getSequences(seqtab)))
+# there are a few sequences that are really long but i think they were removed as chimeras in the next step
+
+# remove chimeras
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+dim(seqtab.nochim)
+sum(seqtab.nochim)/sum(seqtab)
+# still have most of our reads
+
+# look at number of reads that made it through the pipeline
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim))
+# If processing a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim")
+rownames(track) <- sample.names
+head(track)
+# looks good to me; only about 1000 reads lost for each sample
