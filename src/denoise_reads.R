@@ -1,8 +1,15 @@
 library(dada2)
+library(argparse)
 
-outdir <- "eDNA_pipeline_output"
+parser <- ArgumentParser(description="denoise trimmed reads and output ASV table")
+parser$add_argument("-i", "--input", help="path to trimmed reads", required=TRUE)
+parser$add_argument("-o", "--output", help="path to pipeline outdir", required=TRUE)
 
-path <- file.path(outdir, "trimmed_reads") # locate data
+args <- parser$parse_args()
+indir <- args$input
+outdir <- args$output
+
+path <- file.path(indir) # locate data
 # list.files(path)
 
 # divide forward and reverse reads and get sample names
@@ -32,7 +39,6 @@ errF <- learnErrors(filtFs, multithread=TRUE)
 errR <- learnErrors(filtRs, multithread=TRUE)
 plotErrors(errF, nominalQ=TRUE)
 # yeah i think these look fine
-
 
 # sample inference
 dadaFs <- dada(filtFs, err=errF, multithread=TRUE)
