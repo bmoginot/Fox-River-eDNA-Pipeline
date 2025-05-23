@@ -4,10 +4,12 @@ library(argparse)
 parser <- ArgumentParser(description="denoise trimmed reads and output ASV table")
 parser$add_argument("-i", "--input", help="path to trimmed reads", required=TRUE)
 parser$add_argument("-o", "--output", help="path to pipeline outdir", required=TRUE)
+parser$add_argument("-t", "--table", help="what to name of ASV table", required=TRUE)
 
 args <- parser$parse_args()
 indir <- args$input
 outdir <- args$output
+table_name <- args$table
 
 path <- file.path(indir) # locate data
 # list.files(path)
@@ -70,4 +72,4 @@ rownames(track) <- sample.names
 head(track)
 # looks good to me; only about 1000 reads lost for each sample
 
-write.table(seqtab.nochim, file = file.path(outdir, "ASV_table.tsv"), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
+write.table(seqtab.nochim, file = file.path(outdir, table_name), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
