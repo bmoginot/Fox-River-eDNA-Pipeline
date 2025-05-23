@@ -1,11 +1,9 @@
-library(dada2); packageVersion("dada2")
+library(dada2)
 
-setwd("c:/Users/bmogi/OneDrive/Documents/UniDocs/MS Thesis/")
+outdir <- "eDNA_pipeline_output"
 
-"\\wsl.localhost\Ubuntu\home\bmogi\FoxRiver\dada2\trimmed_reads"
-
-path <- "dada2.lnk/trimmed_reads" # locate data
-list.files(path)
+path <- file.path(outdir, "trimmed_reads") # locate data
+# list.files(path)
 
 # divide forward and reverse reads and get sample names
 fnFs <- sort(list.files(path, pattern="_R1_001-subset-trimmed.fastq", full.names = TRUE)) # check if my file names are in the same format
@@ -18,13 +16,13 @@ plotQualityProfile(fnRs[1:2])
 # quality falls off precipitously around the same position for the forward and reverse reads. reverse reads however are worse earlier, expectedly.
 
 # Place filtered files in filtered/ subdirectory
-filtFs <- file.path(path, "filtered", paste0(sample.names, "_F_filt.fastq.gz"))
-filtRs <- file.path(path, "filtered", paste0(sample.names, "_R_filt.fastq.gz"))
+filtFs <- file.path(outdir, "filtered_reads", paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(outdir, "filtered_reads", paste0(sample.names, "_R_filt.fastq.gz"))
 names(filtFs) <- sample.names
 names(filtRs) <- sample.names
 
-out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(140,140),
-                     maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(95,95),
+                     maxN=0, maxEE=c(2,2), truncQ=0, rm.phix=TRUE,
                      compress=TRUE, multithread=FALSE)
 head(out)
 # lost a few hundred reads, everything seems to be in order here
@@ -65,3 +63,5 @@ colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "n
 rownames(track) <- sample.names
 head(track)
 # looks good to me; only about 1000 reads lost for each sample
+
+write.table(seqtab.nochim, file = file.path(outdir, "ASV_table.tsv"), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
