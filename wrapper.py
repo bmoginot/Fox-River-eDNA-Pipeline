@@ -36,6 +36,10 @@ def trim(reads=None, primers=None, outdir=None, log=None):
     return trimmed_reads_dir
 
 def run_dada2(reads=None, outdir=None, log=None, table=None):
+    """
+    denoises trimmed reads using dada2
+    saves asv table as .tsv for downstream taxonomic classification
+    """
     subprocess.run(
             ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-t", table],
             stdout=log
