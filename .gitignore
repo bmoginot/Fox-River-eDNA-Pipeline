@@ -3,3 +3,5 @@ filtered/
 metadata/
 *.sh
 lab_notebook.md
+*.txt
+*.tsv
