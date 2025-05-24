@@ -26,8 +26,8 @@ def trim(reads=None, primers=None, outdir=None, log=None):
     for i in range(0, len(files), 2): # REMOVE HARCODING LATER; LET THEM PICK PRIMERS AND ERROR RATE
         fread = files[i]
         rread = files[i+1]
-        fout = os.path.join(trimmed_reads_dir, fread.split("/")[-1].split(".")[0] + "-trimmed.fastq")
-        rout = os.path.join(trimmed_reads_dir, rread.split("/")[-1].split(".")[0] + "-trimmed.fastq")
+        fout = os.path.join(trimmed_reads_dir, fread.split("/")[-1].split(".")[0] + "-trimmed.fastq.gz")
+        rout = os.path.join(trimmed_reads_dir, rread.split("/")[-1].split(".")[0] + "-trimmed.fastq.gz")
         subprocess.run(
             ["cutadapt", "-g", primers[0], "-G", primers[1], "-e", erate, "-o", fout, "-p", rout, fread, rread],
             stdout=log # write output to log
