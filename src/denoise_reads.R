@@ -5,18 +5,12 @@ library(Biostrings)
 parser <- ArgumentParser(description="denoise trimmed reads and output ASV table")
 parser$add_argument("-i", "--input", help="path to trimmed reads", required=TRUE)
 parser$add_argument("-o", "--output", help="path to pipeline outdir", required=TRUE)
-parser$add_argument("-t", "--table", help="what to name of ASV table", required=TRUE)
+parser$add_argument("-f", "--fasta", help="what to name the ASV fasta (for vsearch)", required=TRUE)
 
 args <- parser$parse_args()
 indir <- args$input
 outdir <- args$output
-table_name <- args$table
-
-setwd("c:/Users/bmogi/dada2_test")
-
-indir <- "trimmed_reads"
-outdir <- "output"
-table_name <- "asvs.fasta"
+outfasta <- args$fasta
 
 path <- file.path(indir) # locate data
 list.files(path)
@@ -83,4 +77,5 @@ head(track)
 asv_seqs <- colnames(seqtab.nochim)
 asv_fasta <- DNAStringSet(asv_seqs)
 names(asv_fasta) <- paste0("ASV_", seq_along(asv_seqs))
-writeXStringSet(asv_fasta, "ASVs.fasta")
+write_asv_out <- file.path(outdir, outfasta)
+writeXStringSet(asv_fasta, write_asv_out)
