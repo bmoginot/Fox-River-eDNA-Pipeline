@@ -142,3 +142,7 @@ for tomorrow (or later):
 read orourke 2021, 2022 and make changes as appropriate
 figure out the log
 rescript
+
+check these out:
+‘qiime rescript evaluate-fit-classifier’
+‘qiime feature-classifier classify-sklearn’
