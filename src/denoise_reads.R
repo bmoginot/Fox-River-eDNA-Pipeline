@@ -1,5 +1,6 @@
 library(dada2)
 library(argparse)
+library(Biostrings)
 
 parser <- ArgumentParser(description="denoise trimmed reads and output ASV table")
 parser$add_argument("-i", "--input", help="path to trimmed reads", required=TRUE)
@@ -11,8 +12,14 @@ indir <- args$input
 outdir <- args$output
 table_name <- args$table
 
+setwd("c:/Users/bmogi/dada2_test")
+
+indir <- "trimmed_reads"
+outdir <- "output"
+table_name <- "asvs.fasta"
+
 path <- file.path(indir) # locate data
-# list.files(path)
+list.files(path)
 
 # divide forward and reverse reads and get sample names
 fnFs <- sort(list.files(path, pattern="_R1_001-subset-trimmed.fastq", full.names = TRUE)) # check if my file names are in the same format
@@ -72,4 +79,8 @@ rownames(track) <- sample.names
 head(track)
 # looks good to me; only about 1000 reads lost for each sample
 
-write.table(seqtab.nochim, file = file.path(outdir, table_name), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
+# some code to convert the asv table to fasta format for vsearch
+asv_seqs <- colnames(seqtab.nochim)
+asv_fasta <- DNAStringSet(asv_seqs)
+names(asv_fasta) <- paste0("ASV_", seq_along(asv_seqs))
+writeXStringSet(asv_fasta, "ASVs.fasta")
