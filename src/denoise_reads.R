@@ -33,7 +33,7 @@ names(filtRs) <- sample.names
 
 out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(95,95),
                      maxN=0, maxEE=c(2,2), truncQ=0, rm.phix=TRUE,
-                     compress=TRUE, multithread=FALSE)
+                     compress=TRUE, multithread=TRUE)
 head(out)
 # lost a few hundred reads, everything seems to be in order here
 
