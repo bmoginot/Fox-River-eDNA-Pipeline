@@ -3,6 +3,7 @@ import sys
 import argparse
 import glob
 import subprocess
+import pandas as pd
 
 def get_args(args=None):
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
@@ -47,6 +48,33 @@ def run_dada2(reads=None, outdir=None, log=None, fasta_name=None):
     
     return os.path.join(outdir, fasta_name)
 
+def run_vsearch(outdir=None, query=None, seqs=None, taxa=None):
+    """finds exact matches with vsearch"""
+    out = os.path.join(outdir, "vserach_hits.tsv")
+    tax_map = os.path.join(outdir, "vsearch_taxa.tsv")
+
+    os.system(f"vsearch --usearch_global {query} \
+            --db {seqs} \
+            --id 1.0 \
+            --query_cov 0.94 \
+            --strand plus \
+            --blast6out {out} \
+            --maxaccepts 0 \
+            --maxhits 1")
+
+    # map taxonomy using vsearch output and taxa info from database
+    hits = pd.read_csv(out, sep="\t", header=None, names=[
+        "query", "id", "pident", "length", "mismatch", "gapopen",
+        "qstart", "qend", "sstart", "send", "evalue", "bitscore"
+    ])
+    taxonomy = pd.read_csv(taxa, sep="\t", header=None, names=["id", "taxon"])
+
+    # Merge on reference ID
+    merged = hits.merge(taxonomy, on="id", how="left")
+
+    # Save to new file
+    merged[["query", "taxon"]].to_csv(tax_map, sep="\t", index=False)
+
 def main():
     args = get_args(sys.argv[1:])
     project_dir = os.getcwd()
@@ -65,7 +93,10 @@ def main():
     fasta_name = "asv.fasta" # name of asv table to store for later
 
     asv_fasta = run_dada2(trimmed_reads_dir, outdir, log, fasta_name)
-    print(asv_fasta)
+
+    seqs = os.path.join(project_dir, "data", "database", "vsearch_ref_seqs.fasta") # CHANGE THIS
+    taxa = os.path.join(project_dir, "data", "database", "vsearch_ref_taxa.tsv") # CHANGE THIS
+    run_vsearch(outdir, asv_fasta, seqs, taxa)
 
     log.close()
 
