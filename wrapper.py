@@ -35,17 +35,17 @@ def trim(reads=None, primers=None, outdir=None, log=None):
 
     return trimmed_reads_dir
 
-def run_dada2(reads=None, outdir=None, log=None, table=None):
+def run_dada2(reads=None, outdir=None, log=None, fasta_name=None):
     """
     denoises trimmed reads using dada2
     saves asv table as .tsv for downstream taxonomic classification
     """
     subprocess.run(
-            ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-t", table],
+            ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-f", fasta_name],
             stdout=log
         )
     
-    return os.path.join(outdir, table)
+    return os.path.join(outdir, fasta_name)
 
 def main():
     args = get_args(sys.argv[1:])
@@ -62,10 +62,10 @@ def main():
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG")
     trimmed_reads_dir = trim(reads_dir, primers, outdir, log)
 
-    table = "asv_table.tsv" # name of asv table to store for later
+    fasta_name = "asv.fasta" # name of asv table to store for later
 
-    asv_table = run_dada2(trimmed_reads_dir, outdir, log, table)
-    print(asv_table)
+    asv_fasta = run_dada2(trimmed_reads_dir, outdir, log, fasta_name)
+    print(asv_fasta)
 
     log.close()
 
