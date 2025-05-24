@@ -130,4 +130,15 @@ edited format_datapase.py to write out taxa map from 1117 db; vsearch needs
     fasta with id + seq
     tsv with id + taxonomy
 vserach runs with asv fasta and db fasta. then, hits tsv is merged with db tsv to map asvs to taxa
-moved vsearch code to wrapper
+moved all test data from test/ to data/
+moved vsearch code to wrapper. seems to be producing expected output.
+the paper cites orourke 2021, 2022 for the "hybrid approach" of taxa classification. i'll read through these later to see exactly what they did. may have to rework vsearch, we will see.
+added subproccess call for vsearch.
+also changed all subprocess calls to also write stderr to the log.
+    i need to figure out what i want to write out to log and to console. though, inevitably, all of this info will just be for me.
+    maybe tell me when certain things are finished, etc. + write out results to log??
+
+for tomorrow (or later):
+read orourke 2021, 2022 and make changes as appropriate
+figure out the log
+rescript
