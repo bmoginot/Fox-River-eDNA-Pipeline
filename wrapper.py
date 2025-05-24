@@ -30,9 +30,16 @@ def trim(reads=None, primers=None, outdir=None, log=None):
         fout = os.path.join(trimmed_reads_dir, fread.split("/")[-1].split(".")[0] + "-trimmed.fastq.gz")
         rout = os.path.join(trimmed_reads_dir, rread.split("/")[-1].split(".")[0] + "-trimmed.fastq.gz")
         subprocess.run(
-            ["cutadapt", "-g", primers[0], "-G", primers[1], "-e", erate, "-o", fout, "-p", rout, fread, rread],
-            stdout=log # write output to log
-        )
+            ["cutadapt",
+             "-g", primers[0],
+             "-G", primers[1],
+             "-e", erate,
+             "-o", fout,
+             "-p", rout,
+             fread, rread],
+            stdout=log, # write output to log
+            stderr=log # and error
+            )
 
     return trimmed_reads_dir
 
@@ -42,25 +49,30 @@ def run_dada2(reads=None, outdir=None, log=None, fasta_name=None):
     saves asv table as .tsv for downstream taxonomic classification
     """
     subprocess.run(
-            ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-f", fasta_name],
-            stdout=log
+        ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-f", fasta_name],
+        stdout=log,
+        stderr=log
         )
     
     return os.path.join(outdir, fasta_name)
 
-def run_vsearch(outdir=None, query=None, seqs=None, taxa=None):
+def run_vsearch(outdir=None, query=None, seqs=None, taxa=None, log=None):
     """finds exact matches with vsearch"""
     out = os.path.join(outdir, "vserach_hits.tsv")
     tax_map = os.path.join(outdir, "vsearch_taxa.tsv")
 
-    os.system(f"vsearch --usearch_global {query} \
-            --db {seqs} \
-            --id 1.0 \
-            --query_cov 0.94 \
-            --strand plus \
-            --blast6out {out} \
-            --maxaccepts 0 \
-            --maxhits 1")
+    subprocess.run(
+        ["vsearch", "--usearch_global", query,
+         "--db", seqs,
+         "--id", "1.0",
+         "--query_cov", "0.94",
+         "--strand", "plus",
+         "--blast6out", out,
+         "--maxaccepts", "0",
+         "--maxhits", "1"],
+         stdout=log,
+         stderr=log
+         )
 
     # map taxonomy using vsearch output and taxa info from database
     hits = pd.read_csv(out, sep="\t", header=None, names=[
@@ -96,7 +108,7 @@ def main():
 
     seqs = os.path.join(project_dir, "data", "database", "vsearch_ref_seqs.fasta") # CHANGE THIS
     taxa = os.path.join(project_dir, "data", "database", "vsearch_ref_taxa.tsv") # CHANGE THIS
-    run_vsearch(outdir, asv_fasta, seqs, taxa)
+    run_vsearch(outdir, asv_fasta, seqs, taxa, log)
 
     log.close()
 
