@@ -20,8 +20,8 @@ fnRs <- sort(list.files(path, pattern="_R2_001-subset-trimmed.fastq", full.names
 sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1) # uses firsts field of fq file name
 
 # get quality of reads
-plotQualityProfile(fnFs[1:2])
-plotQualityProfile(fnRs[1:2])
+# plotQualityProfile(fnFs[1:2])
+# plotQualityProfile(fnRs[1:2])
 # quality falls off precipitously around the same position for the forward and reverse reads. reverse reads however are worse earlier, expectedly.
 
 # Place filtered files in filtered/ subdirectory
@@ -39,7 +39,7 @@ head(out)
 # learn error rates
 errF <- learnErrors(filtFs, multithread=TRUE)
 errR <- learnErrors(filtRs, multithread=TRUE)
-plotErrors(errF, nominalQ=TRUE)
+# plotErrors(errF, nominalQ=TRUE)
 # yeah i think these look fine
 
 # sample inference
