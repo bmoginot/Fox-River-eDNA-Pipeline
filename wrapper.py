@@ -126,11 +126,11 @@ def main():
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG")
     trimmed_reads_dir = trim(reads_dir, primers, outdir, log)
 
-    asv_fasta = run_dada2(trimmed_reads_dir, outdir, log)
+    run_dada2(trimmed_reads_dir, outdir, log)
 
     seqs = os.path.join(project_dir, "data", "database", "vsearch_ref_seqs.fasta") # CHANGE THIS
     taxa = os.path.join(project_dir, "data", "database", "vsearch_ref_taxa.tsv") # CHANGE THIS
-    run_vsearch(outdir, asv_fasta, seqs, taxa, log)
+    run_vsearch(outdir, os.path.join(outdir, "asv_seqs.fasta"), seqs, taxa, log)
 
     log.close()
 
