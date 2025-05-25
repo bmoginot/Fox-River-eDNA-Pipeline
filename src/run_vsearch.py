@@ -7,7 +7,7 @@ query = os.path.join(cwd, "eDNA_pipeline_output", "asv.fasta")
 seqs = os.path.join(cwd, "data", "database", "vsearch_ref_seqs.fasta")
 out = os.path.join(cwd, "eDNA_pipeline_output", "vserach_hits.tsv")
 taxa = os.path.join(cwd, "data", "database", "vsearch_ref_taxa.tsv")
-tax_map = os.path.join(cwd, "eDNA_pipeline_output", "vsearch_taxa.tsv")
+tax_map = os.path.join(cwd, "eDNA_pipeline_output", "vsearch_lca.tsv")
 
 os.system(f"vsearch --usearch_global {query} \
           --db {seqs} \
@@ -34,6 +34,8 @@ for row in vsearch_hits.itertuples():
 
 ref = pd.read_csv(taxa, sep="\t") # read in tsv that maps id to taxa
 
+final_taxa_map = {"query": [], "taxon": []} # data for final tsv output
+
 for query in lca_dict.keys(): # iterate through asvs matched in vsearch
     consensus = ["k__Unclassified", "p__Unclassified", "c__Unclassified", "o__Unclassified", "f__Unclassified", "g__Unclassified", "s__Unclassified"] # default before finding lca
     matched_taxa = list(ref.loc[ref["id"].isin(lca_dict[query])]["Taxon"]) # get all rows in ref where ASV mapped to id
@@ -47,7 +49,11 @@ for query in lca_dict.keys(): # iterate through asvs matched in vsearch
                 consensus[i] = next(iter(level)) # extract taxon level and replace at same level on consensus
     
     else:
-        consensus = matched_taxa
+        consensus = matched_taxa # skip above if there was only one match
 
-    consensus = ";".join(consensus)
-    print(query, consensus)
+    final_taxa_map["query"].append(query) # asv number
+    final_taxa_map["taxon"].append(";".join(consensus)) # lca taxonomy
+
+lca_df = pd.DataFrame(data = final_taxa_map, columns=["query", "taxon"])
+lca_df.to_csv(tax_map, sep="\t")
+    
