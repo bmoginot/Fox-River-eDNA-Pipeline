@@ -19,14 +19,35 @@ os.system(f"vsearch --usearch_global {query} \
           --threads 6 \
           --top_hits_only")
 
-# hits = pd.read_csv(out, sep="\t", header=None, names=[
-#     "query", "id", "pident", "length", "mismatch", "gapopen",
-#     "qstart", "qend", "sstart", "send", "evalue", "bitscore"
-# ])
-# taxonomy = pd.read_csv(taxa, sep="\t", header=None, names=["id", "taxon"])
+# read in vsearch output
+vsearch_hits = pd.read_csv(out, sep="\t", header=None, names=[
+    "query", "id", "pident", "length", "mismatch", "gapopen",
+    "qstart", "qend", "sstart", "send", "evalue", "bitscore"])
 
-# # Merge on reference ID
-# merged = hits.merge(taxonomy, on="id", how="left")
+# create dict that maps each asv to each exact match
+lca_dict = {}
+for row in vsearch_hits.itertuples():
+    if row.query not in lca_dict:
+        lca_dict[row.query] = [row.id]
+    else:
+        lca_dict[row.query].append(row.id)
 
-# # Save to new file
-# merged[["query", "taxon"]].to_csv(tax_map, sep="\t", index=False)
+ref = pd.read_csv(taxa, sep="\t") # read in tsv that maps id to taxa
+
+for query in lca_dict.keys(): # iterate through asvs matched in vsearch
+    consensus = ["k__Unclassified", "p__Unclassified", "c__Unclassified", "o__Unclassified", "f__Unclassified", "g__Unclassified", "s__Unclassified"] # default before finding lca
+    matched_taxa = list(ref.loc[ref["id"].isin(lca_dict[query])]["Taxon"]) # get all rows in ref where ASV mapped to id
+    if len(matched_taxa) > 1:
+        split_taxa = [t.split(";") for t in matched_taxa] # divide string into individual taxa
+
+        for i in range(len(split_taxa[0])): # compare each taxonomic level across each match for that asv
+            level = set([x[i] for x in split_taxa])
+            same = len(level) == 1
+            if same:
+                consensus[i] = next(iter(level)) # extract taxon level and replace at same level on consensus
+    
+    else:
+        consensus = matched_taxa
+
+    consensus = ";".join(consensus)
+    print(query, consensus)
