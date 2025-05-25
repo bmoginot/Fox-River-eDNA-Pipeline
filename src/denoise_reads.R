@@ -71,7 +71,11 @@ rownames(track) <- sample.names
 head(track)
 # looks good to me; only about 1000 reads lost for each sample
 
-write.table(seqtab.nochim, file = file.path(outdir, "asv_table.tsv"), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
+# write asv table out to tsv
+asv_seqs <- colnames(seqtab.nochim)
+asv_ids <- paste0("ASV_", seq_len(length(asv_seqs)))
+asv_mapping <- data.frame(ASV = asv_ids, Sequence = asv_seqs, stringsAsFactors = FALSE)
+write.table(asv_mapping, file = file.path(outdir, "asv_table.tsv"), sep = "\t", row.names = FALSE, quote = FALSE)
 
 # some code to convert the asv table to fasta format for vsearch
 asv_seqs <- colnames(seqtab.nochim)
