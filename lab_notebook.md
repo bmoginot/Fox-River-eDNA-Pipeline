@@ -146,3 +146,14 @@ rescript
 check these out:
 ‘qiime rescript evaluate-fit-classifier’
 ‘qiime feature-classifier classify-sklearn’
+
+## 05/25/25
+what i did:
+updated vsearch parameters to more closely match qiime2 defaults
+qiime2 computes LCA when more than one sequence matches a given ASV. this doesn't seem too hard, i can do this on my own.
+    done
+at this point, we keep anything classified to family or above and move the rest into the naiive bayesian classifier next.
+this is rapidly exiting the scope of my project. i need to download qiime2 and do everything per the paper's methods.
+
+for tomorrow:
+scrap everything and use qiime2 instead
