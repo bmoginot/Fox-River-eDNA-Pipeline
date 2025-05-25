@@ -5,12 +5,10 @@ library(Biostrings)
 parser <- ArgumentParser(description="denoise trimmed reads and output ASV table")
 parser$add_argument("-i", "--input", help="path to trimmed reads", required=TRUE)
 parser$add_argument("-o", "--output", help="path to pipeline outdir", required=TRUE)
-parser$add_argument("-f", "--fasta", help="what to name the ASV fasta (for vsearch)", required=TRUE)
 
 args <- parser$parse_args()
 indir <- args$input
 outdir <- args$output
-outfasta <- args$fasta
 
 path <- file.path(indir) # locate data
 list.files(path)
@@ -73,9 +71,11 @@ rownames(track) <- sample.names
 head(track)
 # looks good to me; only about 1000 reads lost for each sample
 
+write.table(seqtab.nochim, file = file.path(outdir, "asv_table.tsv"), sep = "\t", quote = FALSE, col.names = NA) # write asv table to tsv
+
 # some code to convert the asv table to fasta format for vsearch
 asv_seqs <- colnames(seqtab.nochim)
 asv_fasta <- DNAStringSet(asv_seqs)
 names(asv_fasta) <- paste0("ASV_", seq_along(asv_seqs))
-write_asv_out <- file.path(outdir, outfasta)
+write_asv_out <- file.path(outdir, "asv_seqs.fasta")
 writeXStringSet(asv_fasta, write_asv_out)
