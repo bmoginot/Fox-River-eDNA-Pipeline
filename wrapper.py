@@ -43,18 +43,16 @@ def trim(reads=None, primers=None, outdir=None, log=None):
 
     return trimmed_reads_dir
 
-def run_dada2(reads=None, outdir=None, log=None, fasta_name=None):
+def run_dada2(reads=None, outdir=None, log=None):
     """
     denoises trimmed reads using dada2
     saves asv table as .tsv for downstream taxonomic classification
     """
     subprocess.run(
-        ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir, "-f", fasta_name],
+        ["Rscript", "src/denoise_reads.R", "-i", reads, "-o", outdir],
         stdout=log,
         stderr=log
         )
-    
-    return os.path.join(outdir, fasta_name)
 
 def run_vsearch(outdir=None, query=None, seqs=None, taxa=None, log=None):
     """finds exact matches with vsearch and computes lca"""
@@ -128,9 +126,7 @@ def main():
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG")
     trimmed_reads_dir = trim(reads_dir, primers, outdir, log)
 
-    fasta_name = "asv.fasta" # name of asv table to store for later
-
-    asv_fasta = run_dada2(trimmed_reads_dir, outdir, log, fasta_name)
+    asv_fasta = run_dada2(trimmed_reads_dir, outdir, log)
 
     seqs = os.path.join(project_dir, "data", "database", "vsearch_ref_seqs.fasta") # CHANGE THIS
     taxa = os.path.join(project_dir, "data", "database", "vsearch_ref_taxa.tsv") # CHANGE THIS
