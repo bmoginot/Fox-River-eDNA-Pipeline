@@ -1,3 +1,4 @@
+# generate manifest file to import data into qiime2
 import os
 import glob
 import pandas as pd
