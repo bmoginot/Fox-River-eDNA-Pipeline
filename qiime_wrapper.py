@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 
 def get_args(args=None):
+    """read in command line arguments"""
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
     return parser.parse_args(args)
@@ -29,33 +30,48 @@ def make_manifest(reads=None, outdir=None, log=None):
     man_df = pd.DataFrame(data)
     man_df.to_csv(manifest, sep="\t", index=None)
 
-    subprocess.run(
-        ["qiime", "tools", "import",
-         "--type", "SampleData[PairedEndSequencesWithQuality]",
-         "--input-path", manifest,
-         "--input-format", "PairedEndFastqManifestPhred33V2",
-         "--output-path", archive],
-         stdout=log,
-         stderr=log
-         )
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--type", "SampleData[PairedEndSequencesWithQuality]",
+        "--input-path", manifest,
+        "--input-format", "PairedEndFastqManifestPhred33V2",
+        "--output-path", archive],
+        stdout=log,
+        stderr=log)
     
     return archive
     
 def trim_reads(reads=None, outdir=None, primers=None, log=None):
+    """trim reads using cutadapt"""
     trimmed_reads = os.path.join(outdir, "trimmed_reads.qza")
 
-    subprocess.run(
-        ["qiime", "cutadapt", "trim-paired",
-         "--i-demultiplexed-sequences", reads,
-         "--p-front-f", primers[0],
-         "--p-front-r", primers[1],
-         "--o-trimmed-sequences", trimmed_reads],
-         stdout=log,
-         stderr=log)
+    subprocess.run([
+        "qiime", "cutadapt", "trim-paired",
+        "--i-demultiplexed-sequences", reads,
+        "--p-front-f", primers[0],
+        "--p-front-r", primers[1],
+        "--o-trimmed-sequences", trimmed_reads],
+        stdout=log,
+        stderr=log)
 
     return trimmed_reads
 
+def denoise_reads(trimmed_reads=None, outdir=None, log=None):
+    """denoise reads using dada2"""
+    subprocess.run([
+        "qiime", "dada2", "denoise-paired",
+        "--i-demultiplexed-seqs", trimmed_reads,
+        "--p-trunc-len-f", "95",
+        "--p-trunc-len-r", "95",
+        "--o-representative-sequences", os.path.join(outdir, "asv-sequences-0.qza"),
+        "--o-table", os.path.join(outdir, "feature-table-0.qza"),
+        "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")],
+        stdout=log,
+        stderr=log)
+
 def main():
+    args = get_args(sys.argv[1:]) # get command line arguments
+
     project_dir = os.getcwd()
     outdir = os.path.join(project_dir, "output")
 
@@ -65,14 +81,15 @@ def main():
 
     log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
-    args = get_args(sys.argv[1:])
-    reads = os.path.join(project_dir, args.input)
+    reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
     qiime_archive = make_manifest(reads, outdir, log)
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG")
 
     trimmed_reads = trim_reads(qiime_archive, outdir, primers, log)
+
+    denoise_reads(trimmed_reads, outdir, log)
 
 if __name__ == "__main__":
     main()
