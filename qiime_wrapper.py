@@ -104,8 +104,45 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=No
     
     print(f"done\n")
     
-    # return
+    # return None
 
+def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None):
+    rescript_classifier = os.path.join(outdir, "rescript_classifier")
+    rescript_evaluation = os.path.join(outdir, "rescript_evaluation")
+    rescript_observed_taxonomy = os.path.join(outdir, "rescript_observed_taxonomy")
+
+    print("training...")
+
+    # fit model to 12S database
+    subprocess.run([
+        "qiime", "rescript", "evaluate-fit-classifier",
+        "--i-sequences", train_seqs,
+        "--i-taxonomy", train_taxa,
+        "--p-n-jobs", threads,
+        "--o-classifier", rescript_classifier,
+        "--o-evaluation", rescript_evaluation,
+        "--o-observed-taxonomy", rescript_observed_taxonomy
+    ])
+
+    print(f"done\n")
+
+    nb_model = os.path.join(outdir, "rescript_classifier.qza")
+    nb_classification = os.path.join(outdir, "nb_classification")
+
+    print("classifying...")
+
+    # classify sequences using model built above
+    subprocess.run([
+        "qiime", "feature-classifier", "classify-sklearn",
+        "--i-reads", asv_seqs,
+        "--i-classifier", nb_model,
+        "--p-n-jobs", threads,
+        "--o-classification", nb_classification
+    ])
+
+    print(f"done\n")
+
+    # return None
 def main():
     args = get_args(sys.argv[1:]) # get command line arguments
 
@@ -128,13 +165,15 @@ def main():
 
     asv_seqs = denoise_reads(trimmed_reads, outdir, log)
 
-    # asv_seqs = os.path.join(outdir, "asv-sequences-0.qza")
-
     # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, log)
+
+    # asv_seqs = asv_seqs = os.path.join(outdir, "asv-seqs.qza")
+
+    nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir)
 
     log.close()
 
