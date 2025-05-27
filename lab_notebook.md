@@ -173,3 +173,18 @@ dada2 works
 for vsearch, i need the asv-sequences-0.qza from dada2. i also need to read in a tsv file and a fasta file for reference, this is done via tools/qiime_format_database.py
 vsearch works and outputs tsv and blast6 files
 updated readme to include information about files going in and out at each step
+
+## 05/27/25
+to-do:
+naive bayes classification
+    need to train the model with a database via rescript
+    then classify sequences using model
+
+what i did:
+updated wrapper to print out the current step so i'm not just staring at a blank screen for 5 minutes
+trained model with rescript and saved it to rescript_classifer.qza
+used model to classify asv sequences and output nb_classification.qza
+added multithreading to everything i can (frick dada2)
+got rid of log write-out since most output is supressed by qiime anyway (write my own log later)
+
+there's one more thing i wanted to do but i can't remember
