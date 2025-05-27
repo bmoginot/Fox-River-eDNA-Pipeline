@@ -36,9 +36,8 @@ def import_reads(reads=None, outdir=None, log=None):
         "--type", "SampleData[PairedEndSequencesWithQuality]",
         "--input-path", manifest,
         "--input-format", "PairedEndFastqManifestPhred33V2",
-        "--output-path", archive],
-        stdout=log,
-        stderr=log)
+        "--output-path", archive
+    ])
     
     print(f"done\n")
     
@@ -55,9 +54,8 @@ def trim_reads(reads=None, outdir=None, primers=None, log=None):
         "--i-demultiplexed-sequences", reads,
         "--p-front-f", primers[0],
         "--p-front-r", primers[1],
-        "--o-trimmed-sequences", trimmed_reads],
-        stdout=log,
-        stderr=log)
+        "--o-trimmed-sequences", trimmed_reads
+    ])
     
     print(f"done\n")
 
@@ -77,9 +75,8 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
         "--p-n-threads", "12",
         "--o-representative-sequences", asv_seqs,
         "--o-table", os.path.join(outdir, "feature-table.qza"),
-        "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")],
-        stdout=log,
-        stderr=log)
+        "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")
+    ])
     
     print(f"done\n")
     
@@ -99,9 +96,8 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=No
         "--p-perc-identity", "1.0",
         "--p-min-consensus", "0.94",
         "--o-classification", out_taxa,
-        "--o-search-results", top_hits],
-        stdout=log,
-        stderr=log)
+        "--o-search-results", top_hits
+    ])
     
     print(f"done\n")
     
