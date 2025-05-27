@@ -11,8 +11,8 @@ def get_args(args=None):
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
     return parser.parse_args(args)
 
-def make_manifest(reads=None, outdir=None, log=None):
-    """create manifest file for qiime2 importing"""
+def import_reads(reads=None, outdir=None, log=None):
+    """create manifest file for qiime2 and import reads"""
     paths = sorted(glob.glob(os.path.join(reads, "*")))
     manifest = os.path.join(outdir, "qiime_manifest.tsv")
     archive = os.path.join(outdir, "reads.qza")
@@ -48,6 +48,8 @@ def trim_reads(reads=None, outdir=None, primers=None, log=None):
     """trim reads using cutadapt"""
     trimmed_reads = os.path.join(outdir, "trimmed_reads.qza")
 
+    print("trimming reads...")
+
     subprocess.run([
         "qiime", "cutadapt", "trim-paired",
         "--i-demultiplexed-sequences", reads,
@@ -56,12 +58,16 @@ def trim_reads(reads=None, outdir=None, primers=None, log=None):
         "--o-trimmed-sequences", trimmed_reads],
         stdout=log,
         stderr=log)
+    
+    print(f"done\n")
 
     return trimmed_reads
 
 def denoise_reads(trimmed_reads=None, outdir=None, log=None):
     """denoise reads using dada2"""
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
+
+    print("running dada2...")
 
     subprocess.run([
         "qiime", "dada2", "denoise-paired",
@@ -74,11 +80,15 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
         stdout=log,
         stderr=log)
     
+    print(f"done\n")
+    
     return asv_seqs
     
 def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=None):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
+
+    print("running vsearch...")
 
     subprocess.run([
         "qiime", "feature-classifier", "classify-consensus-vsearch",
@@ -91,6 +101,8 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=No
         "--o-search-results", top_hits],
         stdout=log,
         stderr=log)
+    
+    print(f"done\n")
     
     # return
 
@@ -108,7 +120,7 @@ def main():
 
     reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
-    qiime_archive = make_manifest(reads, outdir, log)
+    qiime_archive = import_reads(reads, outdir, log)
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
@@ -118,7 +130,7 @@ def main():
 
     # asv_seqs = os.path.join(outdir, "asv-sequences-0.qza")
 
-    # generated from database file
+    # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
