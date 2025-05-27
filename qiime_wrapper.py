@@ -169,10 +169,8 @@ def main():
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
+    # taxonomic classification
     run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, log)
-
-    # asv_seqs = asv_seqs = os.path.join(outdir, "asv-seqs.qza")
-
     nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir)
 
     log.close()
