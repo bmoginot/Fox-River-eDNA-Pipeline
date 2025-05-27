@@ -5,7 +5,7 @@ Here's a rough outline of the pipeline so far
 2. create qiime manifest based on filenames for reads, and use that manifest to create qiime archive for reads
 3. trim reads with cutadapt
 4. run dada2 and get fasta file (seqs are asvs)
-5. pass fasta to vsearch
+5. pass fasta to vsearch (with input generated from database formatting script)
 6. .
 
 input files (qiime archives unless otherwise stated):
