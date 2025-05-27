@@ -75,7 +75,6 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
         "--i-demultiplexed-seqs", trimmed_reads,
         "--p-trunc-len-f", "95",
         "--p-trunc-len-r", "95",
-        "--p-n-threads", threads,
         "--o-representative-sequences", asv_seqs,
         "--o-table", os.path.join(outdir, "feature-table.qza"),
         "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")
