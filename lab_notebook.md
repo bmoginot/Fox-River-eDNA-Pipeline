@@ -157,3 +157,19 @@ this is rapidly exiting the scope of my project. i need to download qiime2 and d
 
 for tomorrow:
 scrap everything and use qiime2 instead
+
+## 05/26/25
+made a new wrapper to run qiime2
+before i can do anything, i need to turn my fastq directory into a qiime archive (.qza)
+    in order to do this i need a manifest file
+gzip-ed all of the subset reads using `gzip -r data/subset_reads/`
+added code to create manifest file, successfully imported reads
+cutadapt works as well
+    verified by
+    unzip output/reads.qza
+    `zless | head` for the first sample in data/
+    comparing it against the first sample in trimmed_reads.qza after unzipping that as well
+dada2 works
+for vsearch, i need the asv-sequences-0.qza from dada2. i also need to read in a tsv file and a fasta file for reference, this is done via tools/qiime_format_database.py
+vsearch works and outputs tsv and blast6 files
+updated readme to include information about files going in and out at each step
