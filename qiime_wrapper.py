@@ -5,7 +5,7 @@ import glob
 import argparse
 import pandas as pd
 
-threads = 12
+threads = "12"
 
 def get_args(args=None):
     """read in command line arguments"""
