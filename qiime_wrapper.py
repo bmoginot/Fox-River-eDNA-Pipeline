@@ -26,9 +26,10 @@ def make_manifest(reads=None, outdir=None, log=None):
         data["reverse-absolute-filepath"].append(paths[i+1])
         sample_num += 1
 
-
     man_df = pd.DataFrame(data)
     man_df.to_csv(manifest, sep="\t", index=None)
+
+    print("importing reads...")
 
     subprocess.run([
         "qiime", "tools", "import",
@@ -38,6 +39,8 @@ def make_manifest(reads=None, outdir=None, log=None):
         "--output-path", archive],
         stdout=log,
         stderr=log)
+    
+    print(f"done\n")
     
     return archive
     
@@ -66,7 +69,7 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
         "--p-trunc-len-f", "95",
         "--p-trunc-len-r", "95",
         "--o-representative-sequences", asv_seqs,
-        "--o-table", os.path.join(outdir, "feature-table-0.qza"),
+        "--o-table", os.path.join(outdir, "feature-table.qza"),
         "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")],
         stdout=log,
         stderr=log)
@@ -89,7 +92,7 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=No
         stdout=log,
         stderr=log)
     
-    # return out_taxa
+    # return
 
 def main():
     args = get_args(sys.argv[1:]) # get command line arguments
@@ -97,23 +100,25 @@ def main():
     project_dir = os.getcwd()
     outdir = os.path.join(project_dir, "output")
 
-    # if os.path.isdir(outdir):
-    #     os.system(f"rm -r {outdir}")
-    # os.mkdir(outdir) # make directory to store output
+    if os.path.isdir(outdir):
+        os.system(f"rm -r {outdir}")
+    os.mkdir(outdir) # make directory to store output
 
     log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
-    # reads = os.path.join(project_dir, args.input) # path to reads from arguments
+    reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
-    # qiime_archive = make_manifest(reads, outdir, log)
+    qiime_archive = make_manifest(reads, outdir, log)
 
-    # primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG")
+    primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
-    # trimmed_reads = trim_reads(qiime_archive, outdir, primers, log)
+    trimmed_reads = trim_reads(qiime_archive, outdir, primers, log)
 
-    # asv_seqs = denoise_reads(trimmed_reads, outdir, log)
+    asv_seqs = denoise_reads(trimmed_reads, outdir, log)
 
-    asv_seqs = os.path.join(outdir, "asv-sequences-0.qza")
+    # asv_seqs = os.path.join(outdir, "asv-sequences-0.qza")
+
+    # generated from database file
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
