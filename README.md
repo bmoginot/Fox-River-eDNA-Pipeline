@@ -16,7 +16,10 @@ dada2               fasta file; i believe each sequence corresponds to an asv bu
                     tsv file showing reads lost overall for each step        
 vserach             tsv mapping feature id (based on dada2 fasta file names) to taxon
                     blast6 format tsv mapping feature id to sequence id (from kankakee database) + other stats
-naive bayes         .
+naive bayes
+    training        tarred pickle file containing saved model
+                    html file showing accuracy of model over the course of training (?)
+                    tsv similar to the vsearch output
 
 input files (qiime archives unless otherwise stated):
 importing           manifest.tsv file with paths to input reads
@@ -25,4 +28,5 @@ dada2               trimmed reads
 vsearch             asv sequences from dada2 (in fasta format)
                     fasta file with sequences and sequence ids
                     tsv file with sequence ids and taxonomic classification
-naive bayes         .
+naive bayes
+    training        same as vsearch sans asv seqs
