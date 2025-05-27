@@ -5,6 +5,8 @@ import glob
 import argparse
 import pandas as pd
 
+threads = 12
+
 def get_args(args=None):
     """read in command line arguments"""
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
@@ -54,6 +56,7 @@ def trim_reads(reads=None, outdir=None, primers=None, log=None):
         "--i-demultiplexed-sequences", reads,
         "--p-front-f", primers[0],
         "--p-front-r", primers[1],
+        "--p-cores", threads,
         "--o-trimmed-sequences", trimmed_reads
     ])
     
@@ -72,7 +75,7 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
         "--i-demultiplexed-seqs", trimmed_reads,
         "--p-trunc-len-f", "95",
         "--p-trunc-len-r", "95",
-        "--p-n-threads", "12",
+        "--p-n-threads", threads,
         "--o-representative-sequences", asv_seqs,
         "--o-table", os.path.join(outdir, "feature-table.qza"),
         "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")
@@ -95,6 +98,7 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=No
         "--i-reference-taxonomy", ref_taxa,
         "--p-perc-identity", "1.0",
         "--p-min-consensus", "0.94",
+        "--p-threads", threads,
         "--o-classification", out_taxa,
         "--o-search-results", top_hits
     ])
@@ -132,6 +136,10 @@ def main():
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, log)
+
+    log.close()
+
+    print("fin")
 
 if __name__ == "__main__":
     main()
