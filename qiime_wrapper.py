@@ -13,7 +13,7 @@ def get_args(args=None):
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
     return parser.parse_args(args)
 
-def import_reads(reads=None, outdir=None, log=None):
+def import_reads(reads=None, outdir=None):
     """create manifest file for qiime2 and import reads"""
     paths = sorted(glob.glob(os.path.join(reads, "*")))
     manifest = os.path.join(outdir, "qiime_manifest.tsv")
@@ -45,7 +45,7 @@ def import_reads(reads=None, outdir=None, log=None):
     
     return archive
     
-def trim_reads(reads=None, outdir=None, primers=None, log=None):
+def trim_reads(reads=None, outdir=None, primers=None):
     """trim reads using cutadapt"""
     trimmed_reads = os.path.join(outdir, "trimmed_reads.qza")
 
@@ -64,7 +64,7 @@ def trim_reads(reads=None, outdir=None, primers=None, log=None):
 
     return trimmed_reads
 
-def denoise_reads(trimmed_reads=None, outdir=None, log=None):
+def denoise_reads(trimmed_reads=None, outdir=None):
     """denoise reads using dada2"""
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
 
@@ -84,7 +84,7 @@ def denoise_reads(trimmed_reads=None, outdir=None, log=None):
     
     return asv_seqs
     
-def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, log=None):
+def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
 
@@ -153,27 +153,27 @@ def main():
         os.system(f"rm -r {outdir}")
     os.mkdir(outdir) # make directory to store output
 
-    log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
+    # log = open(os.path.join(outdir, "wrapper.log"), "w") # open logS
 
     reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
-    qiime_archive = import_reads(reads, outdir, log)
+    qiime_archive = import_reads(reads, outdir)
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
-    trimmed_reads = trim_reads(qiime_archive, outdir, primers, log)
+    trimmed_reads = trim_reads(qiime_archive, outdir, primers)
 
-    asv_seqs = denoise_reads(trimmed_reads, outdir, log)
+    asv_seqs = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
-    run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, log)
+    run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir)
     nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir)
 
-    log.close()
+    # log.close()
 
     print("fin")
 
