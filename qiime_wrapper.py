@@ -5,12 +5,11 @@ import glob
 import argparse
 import pandas as pd
 
-threads = "12"
-
 def get_args(args=None):
     """read in command line arguments"""
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
+    parser.add_argument("-t", "--threads", help="# cpu cores to use for applicable functions")
     return parser.parse_args(args)
 
 def import_reads(reads=None, outdir=None):
@@ -45,7 +44,7 @@ def import_reads(reads=None, outdir=None):
     
     return archive
     
-def trim_reads(reads=None, outdir=None, primers=None):
+def trim_reads(reads=None, outdir=None, primers=None, threads=1):
     """trim reads using cutadapt"""
     trimmed_reads = os.path.join(outdir, "trimmed_reads.qza")
 
@@ -84,7 +83,7 @@ def denoise_reads(trimmed_reads=None, outdir=None):
     
     return asv_seqs
     
-def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None):
+def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, threads=1):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
 
@@ -106,7 +105,7 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None):
     
     # return None
 
-def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None):
+def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None, threads=1):
     rescript_classifier = os.path.join(outdir, "rescript_classifier")
     rescript_evaluation = os.path.join(outdir, "rescript_evaluation")
     rescript_observed_taxonomy = os.path.join(outdir, "rescript_observed_taxonomy")
@@ -143,8 +142,12 @@ def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None):
     print(f"done\n")
 
     # return None
+
 def main():
     args = get_args(sys.argv[1:]) # get command line arguments
+
+    threads = str(args.threads) if args.threads else "1"
+    print(threads)
 
     project_dir = os.getcwd()
     outdir = os.path.join(project_dir, "output")
@@ -161,7 +164,7 @@ def main():
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
-    trimmed_reads = trim_reads(qiime_archive, outdir, primers)
+    trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
 
     asv_seqs = denoise_reads(trimmed_reads, outdir)
 
@@ -170,8 +173,8 @@ def main():
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
-    run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir)
-    nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir)
+    run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
+    nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
 
     # log.close()
 
