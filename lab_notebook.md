@@ -188,3 +188,18 @@ added multithreading to everything i can (frick dada2)
 got rid of log write-out since most output is supressed by qiime anyway (write my own log later)
 
 there's one more thing i wanted to do but i can't remember
+
+## 05/28/25
+to-do:
+filter vsearch output *
+pass only non-family-level seqs to bayes
+filter bayes output
+
+what i did:
+script (src/parse_vsearch_output.py) that extracts vsearch output, filters for family-level classification, then splits the tsv into seqs that are sufficiently classified and those that need to go to the bayes classifier
+integrated this script into naive bayes script
+
+next steps:
+filter dada2 asvs using unassigned feature ids from vsearch
+import this and send it to the bayesian classifier
+do the same for bayes output
