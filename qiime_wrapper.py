@@ -147,10 +147,9 @@ def main():
     args = get_args(sys.argv[1:]) # get command line arguments
 
     threads = str(args.threads) if args.threads else "1"
-    print(threads)
 
     project_dir = os.getcwd()
-    outdir = os.path.join(project_dir, "output")
+    outdir = os.path.join(project_dir, "output") 
 
     if os.path.isdir(outdir):
         os.system(f"rm -r {outdir}")
