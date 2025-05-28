@@ -6,7 +6,7 @@ Here's a rough outline of the pipeline so far
 3. trim reads with cutadapt
 4. run dada2 and get fasta file (seqs are asvs)
 5. pass fasta to vsearch (with input generated from database formatting script)
-6. .
+6. filter vserach output and pass to naive bayesian classifier
 
 input files (qiime archives unless otherwise stated):
 importing           manifest.tsv file with paths to input reads (created within the function call)
@@ -17,7 +17,7 @@ vsearch             asv sequences from dada2 (in fasta format)
                     tsv file with sequence ids and taxonomic classification
 naive bayes
     training        same as vsearch sans asv seqs
-    classification  asv sequences from dada2 + classifier created in training
+    classification  filtered asv seqs + classifier created in training
 
 output files (output as qiime archives):
 importing           directory of fastq.gz files
@@ -31,4 +31,4 @@ naive bayes
     training        tarred pickle file containing saved model
                     html file showing accuracy of model over the course of training (?)
                     tsv similar to the vsearch output (feature id is sequence name b/c its provided unlike with classification)
-    classification  tsv similar to vsearch output (but for real sequences this time)
+    classification  tsv similar to vsearch output (but for input sequences this time)
