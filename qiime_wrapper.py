@@ -82,6 +82,46 @@ def denoise_reads(trimmed_reads=None, outdir=None):
     print(f"done\n")
     
     return asv_seqs
+
+def unzip_qza(infile=None, outfile=None):
+    """extract file from qiime archive"""
+    tmp = os.path.join(os.getcwd(), "tmp")
+
+    archive = os.path.join(tmp, "archive")
+    os.system(f"unzip -q {infile} -d {archive}") # unzip qiime archive
+    os.system(f"cp {archive}/*/data/* {outfile}") # remove file of interest from archive
+
+    os.system(f"rm -r {archive}") # clean up temporary archive file
+
+def parse_output(taxa_in=None, taxa_out=None):
+    tmp = os.path.join(os.getcwd(), "tmp")
+
+    unzipped_taxa = os.path.join(tmp, "taxa.tsv")
+    unzip_qza(taxa_in, unzipped_taxa) # extract taxonomy tsv from qiime archive
+
+    taxa_vsearch = pd.read_csv(unzipped_taxa, sep="\t") # read in vsearch output taxonomy.tsv
+
+    unassigned = taxa_vsearch[
+        taxa_vsearch["Taxon"] # take the column with taxonomic classification
+        .str.split(";", expand=False) # split it into a list of taxonomic levels
+        .apply(lambda x: len(x) < 5) # save the rows where there are fewer than 5 levels (less than family-level)
+        ]
+    
+    unassigned_out = os.path.join(tmp, "unassigned_" + taxa_out + "_taxa.tsv")
+    unassigned.to_csv(os.path.join(unassigned_out), sep="\t", index=False)
+    
+    retained = taxa_vsearch.drop( # drop all rows shared with unassigned (retain only family-level classifications)
+        taxa_vsearch[
+            taxa_vsearch["Feature ID"]
+            .isin(unassigned["Feature ID"])
+        ]
+        .index
+    )
+    
+    retained_out = os.path.join(tmp, "retained_" + taxa_out + "_taxa.tsv")
+    retained.to_csv(retained_out, sep="\t", index=False)
+
+    return retained_out
     
 def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, threads=1):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
@@ -103,7 +143,7 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, thread
     
     print(f"done\n")
     
-    # return None
+    return out_taxa
 
 def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None, threads=1):
     rescript_classifier = os.path.join(outdir, "rescript_classifier")
@@ -126,7 +166,7 @@ def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None, 
     print(f"done\n")
 
     nb_model = os.path.join(outdir, "rescript_classifier.qza")
-    nb_classification = os.path.join(outdir, "nb_classification")
+    nb_classification = os.path.join(outdir, "nb_classification.qza")
 
     print("classifying...")
 
@@ -141,7 +181,7 @@ def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None, 
 
     print(f"done\n")
 
-    # return None
+    return nb_classification
 
 def main():
     args = get_args(sys.argv[1:]) # get command line arguments
@@ -151,31 +191,35 @@ def main():
     project_dir = os.getcwd()
     outdir = os.path.join(project_dir, "output") 
 
-    if os.path.isdir(outdir):
-        os.system(f"rm -r {outdir}")
-    os.mkdir(outdir) # make directory to store output
+    # if os.path.isdir(outdir):
+    #     os.system(f"rm -r {outdir}")
+    # os.mkdir(outdir) # make directory to store output
 
-    # log = open(os.path.join(outdir, "wrapper.log"), "w") # open logS
+    # # log = open(os.path.join(outdir, "wrapper.log"), "w") # open logS
 
-    reads = os.path.join(project_dir, args.input) # path to reads from arguments
+    # reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
-    qiime_archive = import_reads(reads, outdir)
+    # qiime_archive = import_reads(reads, outdir)
 
-    primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
+    # primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
-    trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
+    # trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
 
-    asv_seqs = denoise_reads(trimmed_reads, outdir)
+    # asv_seqs = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
-    run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
-    nb_classifier(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
+    asv_seqs = os.path.join(outdir, "asv-seqs.qza")
+    vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
+    retained_vsearch = parse_output(vsearch_out, "vsearch")
 
-    # log.close()
+    bayes_out = nb_classifier(retained_vsearch, ref_seqs, ref_taxa, outdir, threads)
+    retained_bayes = parse_output(bayes_out, "bayes")
+
+    # # log.close()
 
     print("fin")
 
