@@ -6,8 +6,6 @@ import pandas as pd
 def unzip_qza(infile=None, outfile=None):
     """extract file from qiime archive"""
     tmp = os.path.join(os.getcwd(), "tmp")
-    if not os.path.isdir("tmp"):
-        os.system(f"mkdir {tmp}") # make tmp directory to store unzipped archive
 
     archive = os.path.join(tmp, "archive")
     os.system(f"unzip -q {infile} -d {archive}") # unzip qiime archive
@@ -15,10 +13,8 @@ def unzip_qza(infile=None, outfile=None):
 
     os.system(f"rm -r {archive}") # clean up temporary archive file
 
-def parse_output(taxa_in=None):
+def parse_output(taxa_in=None, taxa_out=None):
     tmp = os.path.join(os.getcwd(), "tmp")
-    if not os.path.isdir("tmp"):
-        os.system(f"mkdir {tmp}") # create tmp directory to store taxa files
 
     unzipped_taxa = os.path.join(tmp, "taxa.tsv")
     unzip_qza(taxa_in, unzipped_taxa) # extract taxonomy tsv from qiime archive
@@ -31,7 +27,8 @@ def parse_output(taxa_in=None):
         .apply(lambda x: len(x) < 5) # save the rows where there are fewer than 5 levels (less than family-level)
         ]
     
-    unassigned.to_csv(os.path.join(tmp, "unassigned_vsearch_taxa.tsv"), sep="\t", index=False)
+    unassigned_out = os.path.join(tmp, "unassigned_" + taxa_out + "_taxa.tsv")
+    unassigned.to_csv(os.path.join(unassigned_out), sep="\t", index=False)
     
     retained = taxa_vsearch.drop( # drop all rows shared with unassigned (retain only family-level classifications)
         taxa_vsearch[
@@ -41,7 +38,9 @@ def parse_output(taxa_in=None):
         .index
     )
     
-    retained.to_csv(os.path.join(tmp, "retained_vsearch_taxa.tsv"), sep="\t", index=False)
+    retained_out = os.path.join(tmp, "retained_" + taxa_out + "_taxa.tsv")
+    retained.to_csv(retained_out, sep="\t", index=False)
+    # os.system(f"mv {outfile} output")
 
     # os.system("rm -r tmp") # remove tmp directory
 
@@ -88,8 +87,17 @@ def nb_classifier():
     print(f"done\n")
 
 def main():
+    tmp = os.path.join(os.getcwd(), "tmp")
+    if not os.path.isdir("tmp"):
+        os.system(f"mkdir {tmp}") # create tmp directory to store taxa files
+
     vsearch_out = os.path.join(os.getcwd(), "output", "vsearch_taxa.qza")
-    parse_output(vsearch_out)
+    outtype = "vsearch"
+    parse_output(vsearch_out, outtype)
+
+    bayes_out = os.path.join(os.getcwd(), "output", "nb_classification.qza")
+    outtype = "bayes"
+    parse_output(bayes_out, outtype)
 
 if __name__ == "__main__":
     main()
