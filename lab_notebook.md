@@ -203,3 +203,11 @@ next steps:
 filter dada2 asvs using unassigned feature ids from vsearch
 import this and send it to the bayesian classifier
 do the same for bayes output
+
+## 05/31/25
+what i did:
+parse_output now processes and filters both vsearch and bayes tsvs
+moved all of the functions over to the wrapper
+
+next steps:
+i passed the retained vserach tsv to the bayesian classifier, but what i need to do is take the unassigned tsv, get all of the feature ids and use that to grab sequences from dada2 output. i will write a script to do that tomorrow.
