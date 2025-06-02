@@ -233,3 +233,5 @@ holy shit everything works so far
 everything seems to be in order but i feel like i need a way to check my work. maybe i'll mention this to yoel when he's back.
 
 i also really really need to clean up the output folder and figure out a log
+
+next step: blast with 98% identity and 95% coverage (how to do this in house?)
