@@ -147,11 +147,20 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
 
     features_index = list(pd.read_csv(unassigned, sep="\t")["Feature ID"])
     
-    asv_out = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta")
-    with open(asv_out, "w") as f:
+    unassigned_fasta = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta")
+    with open(unassigned_fasta, "w") as f:
         for feat in features_index:
             f.write(f">{feat}\n")
             f.write(f"{asv_map[feat]}\n")
+
+    asv_out = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.qza")
+
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--input-path", unassigned_fasta,
+        "--output-path", asv_out,
+        "--type", "FeatureData[Sequence]"
+    ])
 
     print(f"done\n")
 
@@ -242,19 +251,21 @@ def main():
     # asv_seqs = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
-    # ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
-    # ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
+    ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
+    ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
-    # vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
-    # unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
-
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
-    unassigned_vserach = os.path.join(outdir, "unassigned_vsearch_taxa.tsv")
+
+    vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
+    unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
+
     unassigned_vsearch_seqs = map_seqs(asv_seqs, unassigned_vserach, "vsearch", outdir)
 
-    # bayes_out = nb_classifier(unassigned_vsearch_seqs, ref_seqs, ref_taxa, outdir, threads)
-    # unassigned_bayes = parse_output(bayes_out, "bayes")
+    bayes_out = nb_classifier(unassigned_vsearch_seqs, ref_seqs, ref_taxa, outdir, threads)
+    unassigned_bayes = parse_output(bayes_out, "bayes", outdir)
+
+    unassigned_bayes_seqs = map_seqs(asv_seqs, unassigned_bayes, "bayes", outdir)
 
     # log.close()
 
