@@ -5,14 +5,14 @@ import glob
 import argparse
 import pandas as pd
 
-def get_args(args=None):
+def get_args(args):
     """read in command line arguments"""
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
     parser.add_argument("-t", "--threads", help="# cpu cores to use for applicable functions")
     return parser.parse_args(args)
 
-def import_reads(reads=None, outdir=None):
+def import_reads(reads, outdir):
     """create manifest file for qiime2 and import reads"""
     paths = sorted(glob.glob(os.path.join(reads, "*")))
     manifest = os.path.join(outdir, "qiime_manifest.tsv")
@@ -28,7 +28,7 @@ def import_reads(reads=None, outdir=None):
         sample_num += 1
 
     man_df = pd.DataFrame(data)
-    man_df.to_csv(manifest, sep="\t", index=None)
+    man_df.to_csv(manifest, sep="\t", index=False)
 
     print("importing reads...")
 
@@ -44,7 +44,7 @@ def import_reads(reads=None, outdir=None):
     
     return archive
     
-def trim_reads(reads=None, outdir=None, primers=None, threads=1):
+def trim_reads(reads, outdir, primers, threads):
     """trim reads using cutadapt"""
     trimmed_reads = os.path.join(outdir, "trimmed_reads.qza")
 
@@ -63,7 +63,7 @@ def trim_reads(reads=None, outdir=None, primers=None, threads=1):
 
     return trimmed_reads
 
-def denoise_reads(trimmed_reads=None, outdir=None):
+def denoise_reads(trimmed_reads, outdir):
     """denoise reads using dada2"""
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
 
@@ -83,23 +83,25 @@ def denoise_reads(trimmed_reads=None, outdir=None):
     
     return asv_seqs
 
-def unzip_qza(infile=None, outfile=None):
+def unzip_qza(infile, outdir):
     """extract file from qiime archive"""
+    os.mkdir("tmp")
     tmp = os.path.join(os.getcwd(), "tmp")
+    outfile = os.path.join(outdir, "archive_file")
 
-    archive = os.path.join(tmp, "archive")
-    os.system(f"unzip -q {infile} -d {archive}") # unzip qiime archive
-    os.system(f"cp {archive}/*/data/* {outfile}") # remove file of interest from archive
+    os.system(f"unzip -q {infile} -d {tmp}") # unzip qiime archive
+    os.system(f"mv {tmp}/*/data/* {outfile}") # remove file of interest from archive
 
-    os.system(f"rm -r {archive}") # clean up temporary archive file
+    os.system(f"rm -r {tmp}") # clean up temporary file
 
-def parse_output(taxa_in=None, taxa_out=None):
-    tmp = os.path.join(os.getcwd(), "tmp")
+    return outfile
 
-    unzipped_taxa = os.path.join(tmp, "taxa.tsv")
-    unzip_qza(taxa_in, unzipped_taxa) # extract taxonomy tsv from qiime archive
+def parse_output(taxa_in, taxa_out, outdir):
+    """parse output from taxa classification and separate into retained and unassigned tsvs"""
+    unzipped_taxa = unzip_qza(taxa_in, outdir) # extract taxonomy tsv from qiime archive
 
     taxa_vsearch = pd.read_csv(unzipped_taxa, sep="\t") # read in vsearch output taxonomy.tsv
+    os.remove(unzipped_taxa)
 
     unassigned = taxa_vsearch[
         taxa_vsearch["Taxon"] # take the column with taxonomic classification
@@ -107,7 +109,7 @@ def parse_output(taxa_in=None, taxa_out=None):
         .apply(lambda x: len(x) < 5) # save the rows where there are fewer than 5 levels (less than family-level)
         ]
     
-    unassigned_out = os.path.join(tmp, "unassigned_" + taxa_out + "_taxa.tsv")
+    unassigned_out = os.path.join(outdir, "unassigned_" + taxa_out + "_taxa.tsv")
     unassigned.to_csv(os.path.join(unassigned_out), sep="\t", index=False)
     
     retained = taxa_vsearch.drop( # drop all rows shared with unassigned (retain only family-level classifications)
@@ -118,12 +120,16 @@ def parse_output(taxa_in=None, taxa_out=None):
         .index
     )
     
-    retained_out = os.path.join(tmp, "retained_" + taxa_out + "_taxa.tsv")
+    retained_out = os.path.join(outdir, "retained_" + taxa_out + "_taxa.tsv")
     retained.to_csv(retained_out, sep="\t", index=False)
 
-    return retained_out
-    
-def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, threads=1):
+    return unassigned_out
+
+def map_seqs(asv_seqs, unassigned, outdir):
+    unzipped_asvs = None
+    asv_map = {}
+
+def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
 
@@ -145,7 +151,7 @@ def run_vsearch(asv_seqs=None, ref_seqs=None, ref_taxa=None, outdir=None, thread
     
     return out_taxa
 
-def nb_classifier(asv_seqs=None, train_seqs=None, train_taxa=None, outdir=None, threads=1):
+def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
     rescript_classifier = os.path.join(outdir, "rescript_classifier")
     rescript_evaluation = os.path.join(outdir, "rescript_evaluation")
     rescript_observed_taxonomy = os.path.join(outdir, "rescript_observed_taxonomy")
@@ -214,10 +220,13 @@ def main():
     # taxonomic classification
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
     vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
-    retained_vsearch = parse_output(vsearch_out, "vsearch")
+    unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
 
-    bayes_out = nb_classifier(retained_vsearch, ref_seqs, ref_taxa, outdir, threads)
-    retained_bayes = parse_output(bayes_out, "bayes")
+    # asv_seqs = os.path.join(outdir, "asv-seqs.qza")
+    # map_seqs(asv_seqs, unassigned_vserach, outdir)
+
+    # bayes_out = nb_classifier(CHANGE, ref_seqs, ref_taxa, outdir, threads)
+    # unassigned_bayes = parse_output(bayes_out, "bayes")
 
     # # log.close()
 
