@@ -103,6 +103,8 @@ def parse_output(taxa_in, taxa_out, outdir):
     taxa_vsearch = pd.read_csv(unzipped_taxa, sep="\t") # read in vsearch output taxonomy.tsv
     os.remove(unzipped_taxa)
 
+    print(f"parsing {taxa_out} taxonomy...")
+
     unassigned = taxa_vsearch[
         taxa_vsearch["Taxon"] # take the column with taxonomic classification
         .str.split(";", expand=False) # split it into a list of taxonomic levels
@@ -123,11 +125,37 @@ def parse_output(taxa_in, taxa_out, outdir):
     retained_out = os.path.join(outdir, "retained_" + taxa_out + "_taxa.tsv")
     retained.to_csv(retained_out, sep="\t", index=False)
 
+    print(f"done\n")
+
     return unassigned_out
 
-def map_seqs(asv_seqs, unassigned, outdir):
-    unzipped_asvs = None
+def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
+    unzipped_asvs = unzip_qza(asv_seqs, outdir)
+
+    print("mapping seqs...")
+
     asv_map = {}
+
+    with open(unzipped_asvs) as f:
+        lines = f.readlines()
+        for i in range(0, len(lines), 2):
+            feat = lines[i][1:].strip()
+            seq = lines[i+1].strip()
+            asv_map[feat] = seq
+    
+    os.remove(unzipped_asvs)
+
+    features_index = list(pd.read_csv(unassigned, sep="\t")["Feature ID"])
+    
+    asv_out = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta")
+    with open(asv_out, "w") as f:
+        for feat in features_index:
+            f.write(f">{feat}\n")
+            f.write(f"{asv_map[feat]}\n")
+
+    print(f"done\n")
+
+    return asv_out
 
 def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
@@ -201,7 +229,7 @@ def main():
     #     os.system(f"rm -r {outdir}")
     # os.mkdir(outdir) # make directory to store output
 
-    # # log = open(os.path.join(outdir, "wrapper.log"), "w") # open logS
+    # log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
     # reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
@@ -214,21 +242,21 @@ def main():
     # asv_seqs = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
-    ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
-    ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
+    # ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
+    # ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
+    # vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
+    # unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
+
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
-    vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
-    unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
+    unassigned_vserach = os.path.join(outdir, "unassigned_vsearch_taxa.tsv")
+    unassigned_vsearch_seqs = map_seqs(asv_seqs, unassigned_vserach, "vsearch", outdir)
 
-    # asv_seqs = os.path.join(outdir, "asv-seqs.qza")
-    # map_seqs(asv_seqs, unassigned_vserach, outdir)
-
-    # bayes_out = nb_classifier(CHANGE, ref_seqs, ref_taxa, outdir, threads)
+    # bayes_out = nb_classifier(unassigned_vsearch_seqs, ref_seqs, ref_taxa, outdir, threads)
     # unassigned_bayes = parse_output(bayes_out, "bayes")
 
-    # # log.close()
+    # log.close()
 
     print("fin")
 
