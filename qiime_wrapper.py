@@ -234,21 +234,21 @@ def main():
     project_dir = os.getcwd()
     outdir = os.path.join(project_dir, "output") 
 
-    # if os.path.isdir(outdir):
-    #     os.system(f"rm -r {outdir}")
-    # os.mkdir(outdir) # make directory to store output
+    if os.path.isdir(outdir):
+        os.system(f"rm -r {outdir}")
+    os.mkdir(outdir) # make directory to store output
 
     # log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
-    # reads = os.path.join(project_dir, args.input) # path to reads from arguments
+    reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
-    # qiime_archive = import_reads(reads, outdir)
+    qiime_archive = import_reads(reads, outdir)
 
-    # primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
+    primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
 
-    # trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
+    trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
 
-    # asv_seqs = denoise_reads(trimmed_reads, outdir)
+    asv_seqs = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
