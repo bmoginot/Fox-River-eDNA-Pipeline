@@ -65,6 +65,8 @@ def trim_reads(reads, outdir, primers, threads):
 
 def denoise_reads(trimmed_reads, outdir):
     """denoise reads using dada2"""
+    outdir = os.path.join(outdir, "dada2")
+    os.mkdir(outdir)
     asv_seqs = os.path.join(outdir, "asv-seqs.qza")
 
     print("running dada2...")
@@ -102,6 +104,8 @@ def parse_output(taxa_in, taxa_out, outdir):
 
     taxa_vsearch = pd.read_csv(unzipped_taxa, sep="\t") # read in vsearch output taxonomy.tsv
     os.remove(unzipped_taxa)
+
+    outdir = os.path.join(outdir, taxa_out)
 
     print(f"parsing {taxa_out} taxonomy...")
 
@@ -147,6 +151,8 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
     os.remove(unzipped_asvs)
 
     features_index = list(pd.read_csv(unassigned, sep="\t")["Feature ID"])
+
+    outdir = os.path.join(outdir, taxa_out)
     
     unassigned_fasta = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta")
     with open(unassigned_fasta, "w") as f:
@@ -169,6 +175,8 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
 
 def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
     """run vsearch to classify taxa based on reference database"""
+    outdir = os.path.join(outdir, "vsearch")
+    os.mkdir(outdir)
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
 
@@ -192,6 +200,8 @@ def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
 
 def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
     """train naive bayesian model on reference database and classify sequences missed by vsearch"""
+    outdir = os.path.join(outdir, "bayes")
+    os.mkdir(outdir)
     rescript_classifier = os.path.join(outdir, "rescript_classifier")
     rescript_evaluation = os.path.join(outdir, "rescript_evaluation")
     rescript_observed_taxonomy = os.path.join(outdir, "rescript_observed_taxonomy")
@@ -258,8 +268,6 @@ def main():
     ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
 
     # taxonomic classification
-    asv_seqs = os.path.join(outdir, "asv-seqs.qza")
-
     vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
     unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
 
