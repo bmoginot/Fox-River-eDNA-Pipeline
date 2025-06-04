@@ -235,3 +235,12 @@ everything seems to be in order but i feel like i need a way to check my work. m
 i also really really need to clean up the output folder and figure out a log
 
 next step: blast with 98% identity and 95% coverage (how to do this in house?)
+
+## 06/04/25
+i think i'm just going to do some housekeeping stuff today
+
+what i did:
+added some docstrings
+created subdirs for dada2, vsearch, and bayes. the parse_output and map_seqs functions also write to vsearch and bayes depending on which input they are called with.
+also updated the readme
+blasted the unclassified bayes seqs. there were only two that fit the criteria (95% coverage, 98% identity) and they were both human
