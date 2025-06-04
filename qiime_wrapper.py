@@ -130,6 +130,7 @@ def parse_output(taxa_in, taxa_out, outdir):
     return unassigned_out
 
 def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
+    """recover fasta file after filtering out classified sequences"""
     unzipped_asvs = unzip_qza(asv_seqs, outdir)
 
     print("mapping seqs...")
@@ -167,6 +168,7 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
     return asv_out
 
 def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
+    """run vsearch to classify taxa based on reference database"""
     out_taxa = os.path.join(outdir, "vsearch_taxa.qza")
     top_hits = os.path.join(outdir, "vsearch_top_hits.qza")
 
@@ -189,6 +191,7 @@ def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
     return out_taxa
 
 def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
+    """train naive bayesian model on reference database and classify sequences missed by vsearch"""
     rescript_classifier = os.path.join(outdir, "rescript_classifier")
     rescript_evaluation = os.path.join(outdir, "rescript_evaluation")
     rescript_observed_taxonomy = os.path.join(outdir, "rescript_observed_taxonomy")
