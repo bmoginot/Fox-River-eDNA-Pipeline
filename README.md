@@ -1,5 +1,14 @@
 # Fox-River-eDNA-Pipeline
-Here's a rough outline of the pipeline so far
+master's degree, here i come :^D
+
+## About
+This pipeline processes and analyzes short-read environmental DNA reads. The goal of my project specifically is to classify the taxa in the Fox River at 3 dams and determine if there is a significant difference in the taxa above and below each dam. 
+
+## Workflow
+1. First, input reads are 
+
+## temp info
+Here's a rough outline of the pipeline so far (for me)
 
 1. input demultiplexed illumina reads
 2. create qiime manifest based on filenames for reads, and use that manifest to create qiime archive for reads
