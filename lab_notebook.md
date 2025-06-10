@@ -244,3 +244,16 @@ added some docstrings
 created subdirs for dada2, vsearch, and bayes. the parse_output and map_seqs functions also write to vsearch and bayes depending on which input they are called with.
 also updated the readme
 blasted the unclassified bayes seqs. there were only two that fit the criteria (95% coverage, 98% identity) and they were both human
+
+## 06/10/25
+ope its been a minute
+
+to-do:
+keep working on documentation
+stats...?
+
+what i did:
+documentation in the README is up to date (through taxonomic classification)
+
+for tomorrow:
+extract biom file from qiime dada2 output and import into phyloseq. import qiime sample data (metadata from dr. picq i believe). merge. go on my merry way
