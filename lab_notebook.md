@@ -257,3 +257,11 @@ documentation in the README is up to date (through taxonomic classification)
 
 for tomorrow:
 extract biom file from qiime dada2 output and import into phyloseq. import qiime sample data (metadata from dr. picq i believe). merge. go on my merry way
+
+## 06/11/25
+i found an R package (qiime2R) that can create a phyloseq object from qiime archives
+i need a feature table, a taxonomy table, a tree, and metadata
+feature table <-- dada2
+metadata <-- in hand from FMNH
+
+need to stitch taxonomy tsvs together (need to do same for fastas)
