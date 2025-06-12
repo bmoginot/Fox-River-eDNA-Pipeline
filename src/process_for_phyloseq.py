@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import glob
+import subprocess
 
 def format_metadata(dir):
     """get rid of guyana data and write metadata out to tsv"""
@@ -15,6 +16,15 @@ def stitch_taxa(dir):
     final_taxa = os.path.join(dir, "final_taxa.tsv")
     os.system(f"cp output/vsearch/retained_vsearch_taxa.tsv {final_taxa}") # duplicate vsearch output
     os.system(f"tail -n +2 output/bayes/retained_bayes_taxa.tsv >> {final_taxa}") # concatenate all but header from bayes output
+
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--type", "FeatureData[Taxonomy]",
+        "--input-path", final_taxa,
+        "--output-path", os.path.join(dir, "final_taxa")
+    ])
+
+    os.remove(final_taxa)
 
 def extract_qza(file, dir):
     os.mkdir("tmp")
@@ -48,11 +58,22 @@ def trim_fastas(dir):
             feat = lines[i][1:].strip()
             unclass_feats.append(feat)
 
-    with open(os.path.join(dir, "final_fasta.fasta"), "w") as f: # write out all seqs except unclassified ones
+    final_seqs = os.path.join(dir, "final_seqs.fasta")
+
+    with open(final_seqs, "w") as f: # write out all seqs except unclassified ones
         for feat in asv_map.keys():
             if feat not in unclass_feats:
                 f.write(f">{feat}\n")
                 f.write(f"{asv_map[feat]}\n")
+
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--type", "FeatureData[Sequence]",
+        "--input-path", final_seqs,
+        "--output-path", os.path.join(dir, "final_seqs")
+    ])
+
+    os.remove(final_seqs)
 
 def main():
     dir = "phyloseq_input"
@@ -63,7 +84,8 @@ def main():
     format_metadata(dir)
     stitch_taxa(dir)
     trim_fastas(dir)
-    extract_qza(os.path.join())
+    # extract_qza(os.path.join("output", "dada2", "feature-table.qza"), dir) # wait i need this as an archive
+    os.system(f"cp output/dada2/feature-table.qza {dir}")
 
 if __name__ == "__main__":
     main()
