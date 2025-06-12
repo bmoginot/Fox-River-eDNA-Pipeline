@@ -278,6 +278,8 @@ def main():
 
     unassigned_bayes_seqs = map_seqs(asv_seqs, unassigned_bayes, "bayes", outdir)
 
+    # CHECK OUT: classify-consensus-blast
+
     # log.close()
 
     print("fin")

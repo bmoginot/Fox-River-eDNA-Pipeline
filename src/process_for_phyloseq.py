@@ -63,6 +63,7 @@ def main():
     format_metadata(dir)
     stitch_taxa(dir)
     trim_fastas(dir)
+    extract_qza(os.path.join())
 
 if __name__ == "__main__":
     main()
