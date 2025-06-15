@@ -121,5 +121,7 @@ def main():
     fasta = trim_fastas(dir)
     align_to_tree(fasta, dir)
 
+    os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
+
 if __name__ == "__main__":
     main()
