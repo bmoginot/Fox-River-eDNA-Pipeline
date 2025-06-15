@@ -31,6 +31,9 @@ This is a three-pronged approach to taxonomic classification.
 2. Sequences that are classified at the family level are set aside as "classified" sequences. The rest remain as "unclassified" sequences. Both are written out to a tsv.
 3. The full ASV fasta from DADA2 is read in and implemented as a hash map. The feature IDs from the unclassified tsv are used to index this hash map to recover the sequences that are yet to be classified (since that information is not in the tsv). These sequences are complied in a fasta file and passed as input to the next tool.
 
+### Phyloseq
+The script src/process_for_phyloseq.py collects biom feature table output by dada2 and metadata table. It then concatenates the taxonomy output from vsearch and the bayes classifier before importing it back into QIIME2. It then looks at the ASV sequences from dada2 and gets rid of any that were unclassified or contaminants before also importing it. It then generates a rooted phylogenetic tree using these sequences. 
+
 ## temp info
 Here's a rough outline of the pipeline so far (for me)
 
