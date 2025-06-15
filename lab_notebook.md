@@ -265,3 +265,10 @@ feature table <-- dada2
 metadata <-- in hand from FMNH
 
 need to stitch taxonomy tsvs together (need to do same for fastas)
+
+## 06/12/25
+what i did:
+finished phyloseq processing script. here's what it does per the readme:
+The script src/process_for_phyloseq.py collects biom feature table output by dada2 and metadata table. It then concatenates the taxonomy output from vsearch and the bayes classifier before importing it back into QIIME2. It then looks at the ASV sequences from dada2 and gets rid of any that were unclassified or contaminants before also importing it. It then generates a rooted phylogenetic tree using these sequences.
+
+copied phyloseq_input file into UniDocs/MSThesis so i can access it in R
