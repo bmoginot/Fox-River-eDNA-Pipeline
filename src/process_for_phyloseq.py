@@ -5,15 +5,20 @@ import subprocess
 
 def format_metadata(dir):
     """get rid of guyana data and write metadata out to tsv"""
+    print("formatting metadata...")
+
     metadata = pd.read_csv(os.path.join("data", "metadata", "kankakeerun_metadata_forqiime.txt"), sep="\t")
     metadata.head()
 
     only_kankakee_data = metadata[metadata["Study"]=="Kankakee"]
-    only_kankakee_data.to_csv(os.path.join(dir, "only_kankakee_metadata.tsv"), sep="\t", index=False)
-    # metadata must be qiime2-compliant
+    only_kankakee_data.to_csv(os.path.join(dir, "only_kankakee_metadata.tsv"), sep="\t", index=False) # metadata must be qiime2-compliant
+
+    print(f"done\n")
 
 def stitch_taxa(dir):
     """very simple command to create aggregate taxa file for phyloseq"""
+    print ("stitching taxa files...")
+
     final_taxa = os.path.join(dir, "final_taxa.tsv")
     os.system(f"cp output/vsearch/retained_vsearch_taxa.tsv {final_taxa}") # duplicate vsearch output
     os.system(f"tail -n +2 output/bayes/retained_bayes_taxa.tsv >> {final_taxa}") # concatenate all but header from bayes output
@@ -27,6 +32,8 @@ def stitch_taxa(dir):
 
     os.remove(final_taxa)
 
+    print(f"done\n")
+
 def extract_qza(file, dir):
     """unzip qiime archive for formatting"""
     os.mkdir("tmp")
@@ -39,6 +46,8 @@ def extract_qza(file, dir):
 
 def trim_fastas(dir):
     """grab fasta output from dada2 and remove sequences that were left unclassified after taxonomy steps"""
+    print("trimming fasta file...")
+
     file = os.path.join("output", "dada2", "asv-seqs.qza")
     dada2_seqs = extract_qza(file, dir)
 
@@ -80,10 +89,14 @@ def trim_fastas(dir):
 
     os.remove(final_seqs)
 
+    print(f"done\n")
+
     return achive_out
 
 def align_to_tree(file, dir):
     """run mafft and fasttree in qiime to generate rooted tree for phyloseq"""
+    print("aligning to tree...")
+
     subprocess.run([
           "qiime", "phylogeny", "align-to-tree-mafft-fasttree",
           "--i-sequences", file,
@@ -93,6 +106,8 @@ def align_to_tree(file, dir):
           "--o-tree", os.path.join(dir, "unrooted_tree"),
           "--o-rooted-tree", os.path.join(dir, "rooted_tree")
     ])
+
+    print(f"done\n")
 
 def main():
     dir = "phyloseq_input"
