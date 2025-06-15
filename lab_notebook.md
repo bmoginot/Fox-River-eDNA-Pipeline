@@ -272,3 +272,13 @@ finished phyloseq processing script. here's what it does per the readme:
 The script src/process_for_phyloseq.py collects biom feature table output by dada2 and metadata table. It then concatenates the taxonomy output from vsearch and the bayes classifier before importing it back into QIIME2. It then looks at the ASV sequences from dada2 and gets rid of any that were unclassified or contaminants before also importing it. It then generates a rooted phylogenetic tree using these sequences.
 
 copied phyloseq_input file into UniDocs/MSThesis so i can access it in R
+
+## 06/15/25
+what i did:
+changed metadata formatting in phyloseq processing script. it now adds a row under the headers detailing the type of the data in each column (this was the problem !!)
+
+to-do:
+clean up phyloseq_input folder because i don't think i realistically need all these files
+
+to dr. picq:
+I am at the stats part and I am trying to convert the qiime2 output into a phyloseq object. I am using qiime2R but I am running into some problems. I think there is a discrepancy between the feature table and the metadata. Is this the metadata you used for phyloseq? and if so how did you import it along with the qiime archives?
