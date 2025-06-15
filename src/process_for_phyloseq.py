@@ -9,7 +9,8 @@ def format_metadata(dir):
     metadata.head()
 
     only_kankakee_data = metadata[metadata["Study"]=="Kankakee"]
-    only_kankakee_data.to_csv(os.path.join(dir, "only_kankakee_metadata.tsv"), sep="\t")
+    only_kankakee_data.to_csv(os.path.join(dir, "only_kankakee_metadata.tsv"), sep="\t", index=False)
+    # metadata must be qiime2-compliant
 
 def stitch_taxa(dir):
     """very simple command to create aggregate taxa file for phyloseq"""
