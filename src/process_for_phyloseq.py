@@ -8,10 +8,16 @@ def format_metadata(dir):
     print("formatting metadata...")
 
     metadata = pd.read_csv(os.path.join("data", "metadata", "kankakeerun_metadata_forqiime.txt"), sep="\t")
-    metadata.head()
 
-    only_kankakee_data = metadata[metadata["Study"]=="Kankakee"]
-    only_kankakee_data.to_csv(os.path.join(dir, "only_kankakee_metadata.tsv"), sep="\t", index=False) # metadata must be qiime2-compliant
+    only_kankakee_data = metadata[metadata["Study"]=="Kankakee"] # subset for only Kankakee data
+
+    # metadata must be qiime2-compliant
+    outfile = os.path.join(dir, "only_kankakee_metadata.tsv")
+    only_kankakee_data.to_csv(outfile, sep="\t", index=False)
+    os.system(f"sed -i '1s/^sampleID/#SampleID/' {outfile}") # change first column header
+    os.system(f"sed -i '1a \
+              #q2:types\tnumeric\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical' \
+              {outfile}") # add type annotations for each column
 
     print(f"done\n")
 
@@ -30,7 +36,7 @@ def stitch_taxa(dir):
         "--output-path", os.path.join(dir, "final_taxa")
     ])
 
-    os.remove(final_taxa)
+    # os.remove(final_taxa)
 
     print(f"done\n")
 
@@ -60,7 +66,7 @@ def trim_fastas(dir):
             seq = lines[i+1].strip()
             asv_map[feat] = seq
 
-    os.remove(dada2_seqs)
+    # os.remove(dada2_seqs)
 
     unclass_feats = []
 
@@ -87,7 +93,7 @@ def trim_fastas(dir):
         "--output-path", achive_out
     ])
 
-    os.remove(final_seqs)
+    # os.remove(final_seqs)
 
     print(f"done\n")
 
