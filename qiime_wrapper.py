@@ -20,12 +20,11 @@ def import_reads(reads, outdir):
 
     data = {"sample-id": [], "forward-absolute-filepath": [], "reverse-absolute-filepath": []}
 
-    sample_num = 1
     for i in range(0, len(paths), 2):
-        data["sample-id"].append("sample-" + str(sample_num))
+        samid = paths[i].split("/")[-1].split("_")[0] # get the sample id from the path (corresponds to metadata)
+        data["sample-id"].append(samid)
         data["forward-absolute-filepath"].append(paths[i])
         data["reverse-absolute-filepath"].append(paths[i+1])
-        sample_num += 1
 
     man_df = pd.DataFrame(data)
     man_df.to_csv(manifest, sep="\t", index=False)
