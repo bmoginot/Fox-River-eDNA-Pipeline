@@ -282,3 +282,21 @@ clean up phyloseq_input folder because i don't think i realistically need all th
 
 to dr. picq:
 I am at the stats part and I am trying to convert the qiime2 output into a phyloseq object. I am using qiime2R but I am running into some problems. I think there is a discrepancy between the feature table and the metadata. Is this the metadata you used for phyloseq? and if so how did you import it along with the qiime archives?
+
+## 06/17/25
+dr. picq got back to me with some qiime commands she ran to format and subset the metadata. she is working with the same metadata file i am though.
+
+i think the problem is that i am using a subset of the data but the full metadata. so, i edited the phyloseq process script to cut down the metadata to only the samples i am using in my subset_reads dir.
+
+that was not the problem; still getting an error about mis-matched sample names with phyloseq
+
+the sample names for the dada2 feature table are sample-# which does not match the metadata.
+
+ITS THE MANIFEST
+
+went into the qiime2 wrapper and changed the sample-id column of the manifest to match the metadata
+i checked to make sure that the feature table had the correct sample names by unzipping the feature-table.qza archive and then using this biom-format command to convert it to a tsv
+    biom convert -i 63483d0e-954a-460c-b443-6a522b19c3cd/data/feature-table.biom -o feature-table.tsv --to-tsv
+loaded all of this into R using the run_phyloseq.R script in MSThesis and I finally have a phyloseq object...
+
+THANK HEAVENS
