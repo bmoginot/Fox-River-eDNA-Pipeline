@@ -7,13 +7,16 @@ def format_metadata(dir):
     """get rid of guyana data and write metadata out to tsv"""
     print("formatting metadata...")
 
+    reads = glob.glob("data/subset_reads/*")
+    samples = [x.split("/")[-1].split("_")[0] for x in reads] # get the sample name (first field of illumina designation) for only the reads i'm using in my test
+
     metadata = pd.read_csv(os.path.join("data", "metadata", "kankakeerun_metadata_forqiime.txt"), sep="\t")
 
-    only_kankakee_data = metadata[metadata["Study"]=="Kankakee"] # subset for only Kankakee data
+    subset_data = metadata[metadata["sampleID"].isin(samples)] # subset for only Kankakee data
 
     # metadata must be qiime2-compliant
-    outfile = os.path.join(dir, "only_kankakee_metadata.tsv")
-    only_kankakee_data.to_csv(outfile, sep="\t", index=False)
+    outfile = os.path.join(dir, "subset_kankakee_metadata.tsv")
+    subset_data.to_csv(outfile, sep="\t", index=False)
     os.system(f"sed -i '1s/^sampleID/#SampleID/' {outfile}") # change first column header
     os.system(f"sed -i '1a \
               #q2:types\tnumeric\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical\tcategorical' \
@@ -117,17 +120,17 @@ def align_to_tree(file, dir):
 
 def main():
     dir = "phyloseq_input"
-    if os.path.isdir(dir):
-        os.system(f"rm -r {dir}")
-    os.mkdir(dir)
+    # if os.path.isdir(dir):
+    #     os.system(f"rm -r {dir}")
+    # os.mkdir(dir)
 
     os.system(f"cp output/dada2/feature-table.qza {dir}") # move feature table from dada2 output
     format_metadata(dir)
-    stitch_taxa(dir)
-    fasta = trim_fastas(dir)
-    align_to_tree(fasta, dir)
+    # stitch_taxa(dir)
+    # fasta = trim_fastas(dir)
+    # align_to_tree(fasta, dir)
 
-    os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
+    # os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
 
 if __name__ == "__main__":
     main()
