@@ -14,6 +14,9 @@ def get_args(args):
 
 def import_reads(reads, outdir):
     """create manifest file for qiime2 and import reads"""
+
+    print("making manifest...")
+
     paths = sorted(glob.glob(os.path.join(reads, "*")))
     manifest = os.path.join(outdir, "qiime_manifest.tsv")
     archive = os.path.join(outdir, "reads.qza")
@@ -28,6 +31,8 @@ def import_reads(reads, outdir):
 
     man_df = pd.DataFrame(data)
     man_df.to_csv(manifest, sep="\t", index=False)
+
+    print(f"done\n")
 
     print("importing reads...")
 
