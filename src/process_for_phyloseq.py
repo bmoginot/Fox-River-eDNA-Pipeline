@@ -39,7 +39,7 @@ def stitch_taxa(dir):
         "--output-path", os.path.join(dir, "final_taxa")
     ])
 
-    # os.remove(final_taxa)
+    os.remove(final_taxa)
 
     print(f"done\n")
 
@@ -69,7 +69,7 @@ def trim_fastas(dir):
             seq = lines[i+1].strip()
             asv_map[feat] = seq
 
-    # os.remove(dada2_seqs)
+    os.remove(dada2_seqs)
 
     unclass_feats = []
 
@@ -96,7 +96,7 @@ def trim_fastas(dir):
         "--output-path", achive_out
     ])
 
-    # os.remove(final_seqs)
+    os.remove(final_seqs)
 
     print(f"done\n")
 
@@ -120,17 +120,17 @@ def align_to_tree(file, dir):
 
 def main():
     dir = "phyloseq_input"
-    # if os.path.isdir(dir):
-    #     os.system(f"rm -r {dir}")
-    # os.mkdir(dir)
+    if os.path.isdir(dir):
+        os.system(f"rm -r {dir}")
+    os.mkdir(dir)
 
     os.system(f"cp output/dada2/feature-table.qza {dir}") # move feature table from dada2 output
     format_metadata(dir)
-    # stitch_taxa(dir)
-    # fasta = trim_fastas(dir)
-    # align_to_tree(fasta, dir)
+    stitch_taxa(dir)
+    fasta = trim_fastas(dir)
+    align_to_tree(fasta, dir)
 
-    # os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
+    os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
 
 if __name__ == "__main__":
     main()
