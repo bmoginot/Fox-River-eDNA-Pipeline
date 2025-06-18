@@ -300,3 +300,8 @@ i checked to make sure that the feature table had the correct sample names by un
 loaded all of this into R using the run_phyloseq.R script in MSThesis and I finally have a phyloseq object...
 
 THANK HEAVENS
+
+## 06/18/25
+plotted diversity metrics using phyloseq
+
+i'm really not sure what i need to be looking for. i need to read the paper over again and email dr. stuart.
