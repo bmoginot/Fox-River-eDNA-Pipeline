@@ -72,7 +72,9 @@ def denoise_reads(trimmed_reads, outdir):
     """denoise reads using dada2"""
     outdir = os.path.join(outdir, "dada2")
     os.mkdir(outdir)
-    asv_seqs = os.path.join(outdir, "asv-seqs.qza")
+
+    asv_seqs = os.path.join(outdir, "asv-seqs.qza") # goes into taxonomic classification
+    feat_table = os.path.join(outdir, "feature-table.qza") # used for phyloseq
 
     print("running dada2...")
 
@@ -82,13 +84,13 @@ def denoise_reads(trimmed_reads, outdir):
         "--p-trunc-len-f", "95",
         "--p-trunc-len-r", "95",
         "--o-representative-sequences", asv_seqs,
-        "--o-table", os.path.join(outdir, "feature-table.qza"),
+        "--o-table", feat_table,
         "--o-denoising-stats", os.path.join(outdir, "dada2-stats.qza")
     ])
     
     print(f"done\n")
     
-    return asv_seqs
+    return asv_seqs, feat_table
 
 def extract_qza(file, dir):
     """unzip qiime archive for formatting"""
@@ -117,7 +119,7 @@ def parse_output(taxa_in, taxa_out, outdir):
         .apply(lambda x: len(x) < 5) # save the rows where there are fewer than 5 levels (less than family-level)
         ]
     
-    unassigned_out = os.path.join(outdir, "unassigned_" + taxa_out + "_taxa.tsv")
+    unassigned_out = os.path.join(outdir, "unassigned_" + taxa_out + "_taxa.tsv") # this goes into the map_seqs function to figure out which exact seqs were left unassigned --> bayes classifier
     unassigned.to_csv(os.path.join(unassigned_out), sep="\t", index=False)
     
     retained = taxa_vsearch.drop( # drop all rows shared with unassigned (retain only family-level classifications)
@@ -128,12 +130,12 @@ def parse_output(taxa_in, taxa_out, outdir):
         .index
     )
     
-    retained_out = os.path.join(outdir, "retained_" + taxa_out + "_taxa.tsv")
+    retained_out = os.path.join(outdir, "retained_" + taxa_out + "_taxa.tsv") # this is used to prep taxonomy file for phyloseq
     retained.to_csv(retained_out, sep="\t", index=False)
 
     print(f"done\n")
 
-    return unassigned_out
+    return unassigned_out, retained_out
 
 def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
     """recover fasta file after filtering out classified sequences"""
@@ -156,13 +158,13 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
 
     outdir = os.path.join(outdir, taxa_out)
     
-    unassigned_fasta = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta")
+    unassigned_fasta = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.fasta") # non-archive version of below which i pass to phyloseq processing part to trim taxa that are still unassigned after bayesian classification
     with open(unassigned_fasta, "w") as f:
         for feat in features_index:
             f.write(f">{feat}\n")
             f.write(f"{asv_map[feat]}\n")
 
-    asv_out = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.qza")
+    asv_out = os.path.join(outdir, "unassigned_" + taxa_out + "_seqs.qza") # unassigned seqs that go to the next classifier 
 
     subprocess.run([
         "qiime", "tools", "import",
@@ -173,7 +175,7 @@ def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
 
     print(f"done\n")
 
-    return asv_out
+    return asv_out, unassigned_fasta
 
 def run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads):
     """run vsearch to classify taxa based on reference database"""
@@ -241,11 +243,11 @@ def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
 
     return nb_classification
 
-def format_metadata(dir):
+def format_metadata(dir, reads):
     """get rid of guyana data and write metadata out to tsv"""
     print("formatting metadata...")
 
-    reads = glob.glob("data/subset_reads/*")
+    reads = glob.glob(os.path.join(reads, "*"))
     samples = [x.split("/")[-1].split("_")[0] for x in reads] # get the sample name (first field of illumina designation) for only the reads i'm using in my test
 
     metadata = pd.read_csv(os.path.join("data", "metadata", "kankakeerun_metadata_forqiime.txt"), sep="\t")
@@ -262,13 +264,13 @@ def format_metadata(dir):
 
     print(f"done\n")
 
-def stitch_taxa(dir):
+def stitch_taxa(dir, vsearch, bayes):
     """very simple command to create aggregate taxa file for phyloseq"""
     print ("stitching taxa files...")
 
     final_taxa = os.path.join(dir, "final_taxa.tsv")
-    os.system(f"cp output/vsearch/retained_vsearch_taxa.tsv {final_taxa}") # duplicate vsearch output
-    os.system(f"tail -n +2 output/bayes/retained_bayes_taxa.tsv >> {final_taxa}") # concatenate all but header from bayes output
+    os.system(f"cp {vsearch} {final_taxa}") # duplicate vsearch output
+    os.system(f"tail -n +2 {bayes} >> {final_taxa}") # concatenate all but header from bayes output
 
     subprocess.run([
         "qiime", "tools", "import",
@@ -281,11 +283,11 @@ def stitch_taxa(dir):
 
     print(f"done\n")
 
-def trim_fastas(dir):
+def trim_fastas(dir, asv_seqs, unassigned_bayes):
     """grab fasta output from dada2 and remove sequences that were left unclassified after taxonomy steps"""
     print("trimming fasta file...")
 
-    file = os.path.join("output", "dada2", "asv-seqs.qza")
+    file = asv_seqs
     dada2_seqs = extract_qza(file, dir)
 
     asv_map = {}
@@ -301,7 +303,7 @@ def trim_fastas(dir):
 
     unclass_feats = []
 
-    with open(os.path.join("output", "bayes", "unassigned_bayes_seqs.fasta")) as f: # get all features left unclassified after bayes
+    with open(unassigned_bayes) as f: # get all features left unclassified after bayes
         lines = f.readlines()
         for i in range(0, len(lines), 2):
             feat = lines[i][1:].strip()
@@ -370,7 +372,7 @@ def main():
 
     trimmed_reads = trim_reads(qiime_archive, outdir, primers, threads)
 
-    asv_seqs = denoise_reads(trimmed_reads, outdir)
+    asv_seqs, feat_table = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
     ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
@@ -378,24 +380,26 @@ def main():
 
     # taxonomic classification
     vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
-    unassigned_vserach = parse_output(vsearch_out, "vsearch", outdir)
+    unassigned_vsearch_taxa, retained_vsearch_taxa = parse_output(vsearch_out, "vsearch", outdir)
 
-    unassigned_vsearch_seqs = map_seqs(asv_seqs, unassigned_vserach, "vsearch", outdir)
+    unassigned_vsearch_seqs_archive, unassigned_vsearch_fasta = map_seqs(asv_seqs, unassigned_vsearch_taxa, "vsearch", outdir)
 
-    bayes_out = nb_classifier(unassigned_vsearch_seqs, ref_seqs, ref_taxa, outdir, threads)
-    unassigned_bayes = parse_output(bayes_out, "bayes", outdir)
+    bayes_out = nb_classifier(unassigned_vsearch_seqs_archive, ref_seqs, ref_taxa, outdir, threads)
+    unassigned_bayes_taxa, retained_bayes_taxa = parse_output(bayes_out, "bayes", outdir)
 
-    unassigned_bayes_seqs = map_seqs(asv_seqs, unassigned_bayes, "bayes", outdir)
+    unassigned_bayes_seqs_archive, unassigned_bayes_fasta = map_seqs(asv_seqs, unassigned_bayes_taxa, "bayes", outdir)
 
+    # prep files for phyloseq
     dir = os.path.join(outdir, "phyloseq_input")
-    if os.path.isdir(dir):
-        os.system(f"rm -r {dir}")
     os.mkdir(dir)
 
-    os.system(f"cp output/dada2/feature-table.qza {dir}") # move feature table from dada2 output
-    format_metadata(dir)
-    stitch_taxa(dir)
-    fasta = trim_fastas(dir)
+    os.system(f"cp {feat_table} {dir}") # move feature table from dada2 output
+
+    format_metadata(dir, reads)
+
+    stitch_taxa(dir, retained_vsearch_taxa, retained_bayes_taxa)
+
+    fasta = trim_fastas(dir, asv_seqs, unassigned_bayes_fasta)
     align_to_tree(fasta, dir)
 
     os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
