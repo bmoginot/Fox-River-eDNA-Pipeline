@@ -305,3 +305,12 @@ THANK HEAVENS
 plotted diversity metrics using phyloseq
 
 i'm really not sure what i need to be looking for. i need to read the paper over again and email dr. stuart.
+
+## 06/20/25
+grabbed samples 22 & 23 from the Kankakee OneDrive and ran the subset script (which still works like a charm, thanks past ben) so now we have a subset that represents the three groups: tributary, river inside the state park, and river outside the state park. ran all those through the pipeline.
+
+starting to keep notes on stats because i have no formal training
+
+moved phyloseq processing functions over the the wrapper. removed hardcoding. filtered qiime output so i only have the four files i need to make a phylseq object. ran those through the phyloseq script and we have plots!!
+
+check commits for more details + a play-by-play (if you will). (actually check commits for all info really)
