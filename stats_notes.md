@@ -29,7 +29,7 @@ new_alpha = original_alpha / n
 original_alpha is usually 0.5. n is the number of tests being performed.
 
 ## Workflow (???)
-check normality of data using (dr. picq's was not, so i'm assuming my data will not be normal either)
+check normality of data using Shapiro-Wilk (dr. picq's was not, so i'm assuming my data will not be normal either)
 one-way ANOVA (Kruskal-Wallis) on three categories (tributary, park river, outside park river)
 Wilcoxon rank sum test (pairwise, each category against against each other category)
 Bonferroni correction to determine new alpha to consider for each pairwise Wilcoxon test
