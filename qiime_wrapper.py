@@ -264,11 +264,14 @@ def format_metadata(dir, reads):
 
     print(f"done\n")
 
+    return outfile
+
 def stitch_taxa(dir, vsearch, bayes):
     """very simple command to create aggregate taxa file for phyloseq"""
     print ("stitching taxa files...")
 
     final_taxa = os.path.join(dir, "final_taxa.tsv")
+    taxa_archive = os.path.join(dir, "final_taxa.qza")
     os.system(f"cp {vsearch} {final_taxa}") # duplicate vsearch output
     os.system(f"tail -n +2 {bayes} >> {final_taxa}") # concatenate all but header from bayes output
 
@@ -276,12 +279,14 @@ def stitch_taxa(dir, vsearch, bayes):
         "qiime", "tools", "import",
         "--type", "FeatureData[Taxonomy]",
         "--input-path", final_taxa,
-        "--output-path", os.path.join(dir, "final_taxa")
+        "--output-path", taxa_archive
     ])
 
     os.remove(final_taxa)
 
     print(f"done\n")
+
+    return taxa_archive
 
 def trim_fastas(dir, asv_seqs, unassigned_bayes):
     """grab fasta output from dada2 and remove sequences that were left unclassified after taxonomy steps"""
@@ -336,6 +341,8 @@ def align_to_tree(file, dir):
     """run mafft and fasttree in qiime to generate rooted tree for phyloseq"""
     print("aligning to tree...")
 
+    rooted_tree = os.path.join(dir, "rooted_tree.qza")
+
     subprocess.run([
           "qiime", "phylogeny", "align-to-tree-mafft-fasttree",
           "--i-sequences", file,
@@ -343,10 +350,12 @@ def align_to_tree(file, dir):
           "--o-alignment", os.path.join(dir, "unmaksed_alignment"),
           "--o-masked-alignment", os.path.join(dir, "masked_alignment"),
           "--o-tree", os.path.join(dir, "unrooted_tree"),
-          "--o-rooted-tree", os.path.join(dir, "rooted_tree")
+          "--o-rooted-tree", rooted_tree
     ])
 
     print(f"done\n")
+
+    return rooted_tree
 
 def main():
     start = time.time()
@@ -390,19 +399,26 @@ def main():
     unassigned_bayes_seqs_archive, unassigned_bayes_fasta = map_seqs(asv_seqs, unassigned_bayes_taxa, "bayes", outdir)
 
     # prep files for phyloseq
-    dir = os.path.join(outdir, "phyloseq_input")
-    os.mkdir(dir)
+    physeq_tmp = os.path.join(outdir, "physeq_tmp") # create temp dir to store qiime output (i don't need all of it)
+    os.mkdir(physeq_tmp)
 
-    os.system(f"cp {feat_table} {dir}") # move feature table from dada2 output
+    final_metadata = format_metadata(physeq_tmp, reads)
 
-    format_metadata(dir, reads)
+    final_taxa = stitch_taxa(physeq_tmp, retained_vsearch_taxa, retained_bayes_taxa)
 
-    stitch_taxa(dir, retained_vsearch_taxa, retained_bayes_taxa)
+    fasta = trim_fastas(physeq_tmp, asv_seqs, unassigned_bayes_fasta)
+    rooted_tree = align_to_tree(fasta, physeq_tmp)
 
-    fasta = trim_fastas(dir, asv_seqs, unassigned_bayes_fasta)
-    align_to_tree(fasta, dir)
+    physeq = os.path.join(outdir, "physeq") # only the files i need to create a phyloseq object in R
+    os.mkdir(physeq)
+    os.system(f"cp {final_metadata} {physeq}") # subset metadata file
+    os.system(f"cp {feat_table} {physeq}") # biom format feature table from dada2
+    os.system(f"cp {final_taxa} {physeq}") # taxonomy file from vsearch and bayes classifiers
+    os.system(f"cp {rooted_tree} {physeq}") # rooted tree from mafft and fasttree
 
-    os.system(f"cp -r {dir} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
+    os.system(f"rm -r {physeq_tmp}") # get rid of unneeded files
+
+    os.system(f"cp -r {physeq} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
 
     end = time.time()
 
