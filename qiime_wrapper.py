@@ -4,6 +4,7 @@ import subprocess
 import glob
 import argparse
 import pandas as pd
+import time
 
 def get_args(args):
     """read in command line arguments"""
@@ -89,22 +90,19 @@ def denoise_reads(trimmed_reads, outdir):
     
     return asv_seqs
 
-def unzip_qza(infile, outdir):
-    """extract file from qiime archive"""
+def extract_qza(file, dir):
+    """unzip qiime archive for formatting"""
     os.mkdir("tmp")
-    tmp = os.path.join(os.getcwd(), "tmp")
-    outfile = os.path.join(outdir, "archive_file")
+    os.system(f"unzip -qd tmp {file}")
+    unzipped = glob.glob("tmp/*/data/*")[0]
+    os.system(f"mv {unzipped} {dir}")
+    os.system("rm -r tmp")
 
-    os.system(f"unzip -q {infile} -d {tmp}") # unzip qiime archive
-    os.system(f"mv {tmp}/*/data/* {outfile}") # remove file of interest from archive
-
-    os.system(f"rm -r {tmp}") # clean up temporary file
-
-    return outfile
+    return os.path.join(dir, os.path.split(unzipped)[-1])
 
 def parse_output(taxa_in, taxa_out, outdir):
     """parse output from taxa classification and separate into retained and unassigned tsvs"""
-    unzipped_taxa = unzip_qza(taxa_in, outdir) # extract taxonomy tsv from qiime archive
+    unzipped_taxa = extract_qza(taxa_in, outdir) # extract taxonomy tsv from qiime archive
 
     taxa_vsearch = pd.read_csv(unzipped_taxa, sep="\t") # read in vsearch output taxonomy.tsv
     os.remove(unzipped_taxa)
@@ -139,7 +137,7 @@ def parse_output(taxa_in, taxa_out, outdir):
 
 def map_seqs(asv_seqs, unassigned, taxa_out, outdir):
     """recover fasta file after filtering out classified sequences"""
-    unzipped_asvs = unzip_qza(asv_seqs, outdir)
+    unzipped_asvs = extract_qza(asv_seqs, outdir)
 
     print("mapping seqs...")
 
@@ -244,6 +242,8 @@ def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
     return nb_classification
 
 def main():
+    start = time.time()
+
     args = get_args(sys.argv[1:]) # get command line arguments
 
     threads = str(args.threads) if args.threads else "1"
@@ -281,6 +281,10 @@ def main():
     unassigned_bayes = parse_output(bayes_out, "bayes", outdir)
 
     unassigned_bayes_seqs = map_seqs(asv_seqs, unassigned_bayes, "bayes", outdir)
+
+    end = time.time()
+
+    print(f"took {end - start} seconds\n")
 
     # CHECK OUT: classify-consensus-blast
 
