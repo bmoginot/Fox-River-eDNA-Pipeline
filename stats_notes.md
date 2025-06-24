@@ -33,3 +33,5 @@ check normality of data using Shapiro-Wilk (dr. picq's was not, so i'm assuming 
 one-way ANOVA (Kruskal-Wallis) on three categories (tributary, park river, outside park river)
 Wilcoxon rank sum test (pairwise, each category against against each other category)
 Bonferroni correction to determine new alpha to consider for each pairwise Wilcoxon test
+
+# READ PAPERS ON "latest and greatest analyses" for eDNA stuff
