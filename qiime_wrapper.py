@@ -10,6 +10,7 @@ def get_args(args):
     """read in command line arguments"""
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
+    parser.add_argument("-m", "--metadata", help="metadata for creating phyloseq object", required=True)
     parser.add_argument("-t", "--threads", help="# cpu cores to use for applicable functions")
     return parser.parse_args(args)
 
@@ -243,14 +244,14 @@ def nb_classifier(asv_seqs, train_seqs, train_taxa, outdir, threads):
 
     return nb_classification
 
-def format_metadata(dir, reads):
+def format_metadata(dir, reads, metadata):
     """get rid of guyana data and write metadata out to tsv"""
     print("formatting metadata...")
 
     reads = glob.glob(os.path.join(reads, "*"))
     samples = [x.split("/")[-1].split("_")[0] for x in reads] # get the sample name (first field of illumina designation) for only the reads i'm using in my test
 
-    metadata = pd.read_csv(os.path.join("data", "metadata", "kankakeerun_metadata_forqiime.txt"), sep="\t")
+    metadata = pd.read_csv(metadata, sep="\t")
 
     subset_data = metadata[metadata["sampleID"].isin(samples)] # subset for only Kankakee data
 
@@ -375,6 +376,8 @@ def main():
 
     reads = os.path.join(project_dir, args.input) # path to reads from arguments
 
+    metadata = os.path.join(project_dir, args.metadata)
+
     qiime_archive = import_reads(reads, outdir)
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
@@ -402,7 +405,7 @@ def main():
     physeq_tmp = os.path.join(outdir, "physeq_tmp") # create temp dir to store qiime output (i don't need all of it)
     os.mkdir(physeq_tmp)
 
-    final_metadata = format_metadata(physeq_tmp, reads)
+    final_metadata = format_metadata(physeq_tmp, reads, metadata)
 
     final_taxa = stitch_taxa(physeq_tmp, retained_vsearch_taxa, retained_bayes_taxa)
 
