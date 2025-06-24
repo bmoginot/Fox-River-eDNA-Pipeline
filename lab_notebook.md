@@ -314,3 +314,17 @@ starting to keep notes on stats because i have no formal training
 moved phyloseq processing functions over the the wrapper. removed hardcoding. filtered qiime output so i only have the four files i need to make a phylseq object. ran those through the phyloseq script and we have plots!!
 
 check commits for more details + a play-by-play (if you will). (actually check commits for all info really)
+
+## 06/24/25
+
+i had a very nice weekend thank you for asking :D
+
+currently at the "fish lab workstation" <-- lit as hell
+downloaded wsl, ubuntu, and vscode
+
+i think we have 24 processors
+
+plan of attack:
+download all Kankakee reads
+subset reads to diagnose any problems
+run all reads through pipeline
