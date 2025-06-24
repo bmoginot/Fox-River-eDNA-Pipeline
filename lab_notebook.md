@@ -325,6 +325,30 @@ downloaded wsl, ubuntu, and vscode
 i think we have 24 processors
 
 plan of attack:
-download all Kankakee reads
+download all Kankakee reads *
 subset reads to diagnose any problems
 run all reads through pipeline
+
+i need to install some dependencies:
+
+conda
+```
+mkdir -p ~/miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm ~/miniconda3/miniconda.sh
+
+source ~/miniconda3/bin/activate
+conda init --all
+```
+
+qiime2
+```
+conda env create \
+  --name qiime2-amplicon-2025.4 \
+  --file https://raw.githubusercontent.com/qiime2/distributions/refs/heads/dev/2025.4/amplicon/released/qiime2-amplicon-ubuntu-latest-conda.yml
+```
+
+before running:
+
+need to create a seq and taxa ref for vsearch, etc --> incorporate into pipeline
