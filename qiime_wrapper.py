@@ -11,6 +11,7 @@ def get_args(args):
     parser = argparse.ArgumentParser(description="run eDNA pipeline")
     parser.add_argument("-i", "--input", help="directory containing reads", required=True)
     parser.add_argument("-m", "--metadata", help="metadata for creating phyloseq object", required=True)
+    parser.add_argument("-d", "--database", help="database file for vsearch and naive bayes taxonomy assignment", required=True)
     parser.add_argument("-t", "--threads", help="# cpu cores to use for applicable functions")
     return parser.parse_args(args)
 
@@ -92,6 +93,49 @@ def denoise_reads(trimmed_reads, outdir):
     print(f"done\n")
     
     return asv_seqs, feat_table
+
+def make_ref_files(database, outdir):
+    print("importing database...")
+    tax_db = pd.read_csv(database, sep="\t") # read in database
+
+    refdir = os.path.join(outdir, "reference")
+    os.mkdir(refdir) # create directory for taxonomy reference files
+
+    ref_seqs = os.path.join(refdir, "ref_seqs.fasta")
+    ref_taxa = os.path.join(refdir, "ref_taxa.tsv")
+
+    with open(ref_seqs, "w") as f:
+        for row in tax_db.itertuples(): # iterate through df, extract ids and sequences and write in fasta format
+            id = ">" + row.id
+            seq = row.Sequence
+            f.write(f"{id}\n")
+            f.write(f"{seq}\n")
+
+    # drop sequence, write taxa map to tsv
+    tax_db_noseq = tax_db.drop(labels="Sequence", axis=1)
+    tax_db_noseq.to_csv(ref_taxa, sep="\t", index=False, header=["Feature ID", "Taxon"])
+
+    qza_ref_seqs = os.path.join(refdir, "qiime_ref_seqs.qza")
+    qza_ref_taxa = os.path.join(refdir, "qiime_ref_taxa.qza")
+
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--type", "FeatureData[Sequence]",
+        "--input-path", ref_seqs,
+        "--output-path", qza_ref_seqs
+        ])
+
+    subprocess.run([
+        "qiime", "tools", "import",
+        "--type", "FeatureData[Taxonomy]",
+        "--input-format", "TSVTaxonomyFormat",
+        "--input-path", ref_taxa,
+        "--output-path", qza_ref_taxa
+        ])
+    
+    print(f"done\n")
+    
+    return qza_ref_seqs, qza_ref_taxa
 
 def extract_qza(file, dir):
     """unzip qiime archive for formatting"""
@@ -362,7 +406,9 @@ def main():
     start = time.time()
 
     args = get_args(sys.argv[1:]) # get command line arguments
-
+    reads = os.path.abspath(args.input) # path to reads from arguments
+    metadata = os.path.abspath(args.metadata) # path to metadata
+    database = os.path.abspath(args.database)
     threads = str(args.threads) if args.threads else "1"
 
     outdir = os.path.abspath("output") # TRY: os.path.abspath("outdir")
@@ -373,10 +419,6 @@ def main():
 
     # log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
-    reads = os.path.abspath(args.input) # path to reads from arguments
-
-    metadata = os.path.abspath(args.metadata)
-
     qiime_archive = import_reads(reads, outdir)
 
     primers = ("ACTGGGATTAGATACCCC", "TAGAACAGGCTCCTCTAG") # MAYBE TAKE THIS AS INPUT IDK
@@ -386,8 +428,7 @@ def main():
     asv_seqs, feat_table = denoise_reads(trimmed_reads, outdir)
 
     # these are generated from the database file using the format script in tools/
-    ref_seqs = os.path.join(project_dir, "data", "database", "seq_ref_for_qiime_vsearch.qza")
-    ref_taxa = os.path.join(project_dir, "data", "database", "taxa_ref_for_qiime_vsearch.qza")
+    ref_seqs, ref_taxa = make_ref_files(database, outdir)
 
     # taxonomic classification
     vsearch_out = run_vsearch(asv_seqs, ref_seqs, ref_taxa, outdir, threads)
