@@ -345,10 +345,31 @@ conda init --all
 qiime2
 ```
 conda env create \
-  --name qiime2-amplicon-2025.4 \
+  --name qiime2-env \
   --file https://raw.githubusercontent.com/qiime2/distributions/refs/heads/dev/2025.4/amplicon/released/qiime2-amplicon-ubuntu-latest-conda.yml
 ```
 
 before running:
 
 need to create a seq and taxa ref for vsearch, etc --> incorporate into pipeline
+
+## 06/25/25
+
+to-do:
+incorporate qiime_format_database script into wrapper *
+run total reads through *
+run a local blast
+
+everything runs properly. input needed: reads dir, metadata, database(, threads)
+
+erm... dada2 works with multithreading now?? (i don't think it sped the program up at all though...)
+it was slower??????????????????????
+
+running with whole dataset now *crosses fingers*
+holy shit that worked
+
+BLAST
+take unclassified bayes fasta and put it into megablast
+scrub through the hits for each sequence
+i'm really not sure what the best way to do this is
+everything i tried is really cumbersome
