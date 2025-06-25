@@ -365,8 +365,7 @@ def main():
 
     threads = str(args.threads) if args.threads else "1"
 
-    project_dir = os.getcwd()
-    outdir = os.path.join(project_dir, "output") # TRY: os.path.abspath("outdir")
+    outdir = os.path.abspath("output") # TRY: os.path.abspath("outdir")
 
     if os.path.isdir(outdir):
         os.system(f"rm -r {outdir}")
@@ -374,9 +373,9 @@ def main():
 
     # log = open(os.path.join(outdir, "wrapper.log"), "w") # open log
 
-    reads = os.path.join(project_dir, args.input) # path to reads from arguments
+    reads = os.path.abspath(args.input) # path to reads from arguments
 
-    metadata = os.path.join(project_dir, args.metadata)
+    metadata = os.path.abspath(args.metadata)
 
     qiime_archive = import_reads(reads, outdir)
 
