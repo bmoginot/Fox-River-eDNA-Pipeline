@@ -444,7 +444,7 @@ def main():
     physeq_tmp = os.path.join(outdir, "physeq_tmp") # create temp dir to store qiime output (i don't need all of it)
     os.mkdir(physeq_tmp)
 
-    final_metadata = format_metadata(physeq_tmp, reads, metadata)
+    # final_metadata = format_metadata(physeq_tmp, reads, metadata)
 
     final_taxa = stitch_taxa(physeq_tmp, retained_vsearch_taxa, retained_bayes_taxa)
 
@@ -453,14 +453,14 @@ def main():
 
     physeq = os.path.join(outdir, "physeq") # only the files i need to create a phyloseq object in R
     os.mkdir(physeq)
-    os.system(f"cp {final_metadata} {physeq}") # subset metadata file
+    os.system(f"cp {metadata} {physeq}") # subset metadata file
     os.system(f"cp {feat_table} {physeq}") # biom format feature table from dada2
     os.system(f"cp {final_taxa} {physeq}") # taxonomy file from vsearch and bayes classifiers
     os.system(f"cp {rooted_tree} {physeq}") # rooted tree from mafft and fasttree
 
-    os.system(f"rm -r {physeq_tmp}") # get rid of unneeded files
+    # os.system(f"rm -r {physeq_tmp}") # get rid of unneeded files
 
-    os.system(f"cp -r {physeq} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
+    # os.system(f"cp -r {physeq} /mnt/c/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/") # export for analysis in R
 
     end = time.time()
 
