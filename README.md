@@ -1,6 +1,4 @@
 # Fox-River-eDNA-Pipeline
-master's degree, here i come :^D
-
 ## About
 This pipeline processes and analyzes short-read environmental DNA reads. The goal of my project specifically is to classify the taxa in the Fox River at 3 dams and determine if there is a significant difference in the taxa above and below each dam. 
 
