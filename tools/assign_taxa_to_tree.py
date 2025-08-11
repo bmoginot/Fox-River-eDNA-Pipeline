@@ -1,3 +1,5 @@
+# assigns taxonomy to newick tree and seq alignment based on qiime taxa output to create human-readable phylograms
+
 import sys
 import argparse
 import os
