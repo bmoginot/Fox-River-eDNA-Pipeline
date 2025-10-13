@@ -2,7 +2,7 @@ library(tidyverse)
 library(qiime2R)
 library(phyloseq)
 
-setwd("C:/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/phyloseq_input")
+setwd("C:/Users/bmogi/OneDrive/Documents/UniDocs/MSThesis/physeq")
 
 # importing code adapted from yanxianl on qiime2 forums (https://forum.qiime2.org/t/counting-unique-species-in-r/11771/5)
 
@@ -32,4 +32,6 @@ asv_richness <- estimate_richness(ps_no_pcr, measures = "Observed") # number of 
 
 shannon_div <- estimate_richness(ps_no_pcr, measures = "Shannon") # Shannon diversity per sample
 
-plot_richness(ps_no_pcr, x="Filter", measures=c("Observed", "Shannon"), color="categories") # i can probably play around with this. i'm not really sure what i'm looking for honestly.
+plot_richness(ps_no_pcr, measures=c("Observed", "Shannon"), color="categories") # i can probably play around with this. i'm not really sure what i'm looking for honestly.
+
+shannon_div <- estimate_richness(ps_no_pcr, measures = "Shannon")
