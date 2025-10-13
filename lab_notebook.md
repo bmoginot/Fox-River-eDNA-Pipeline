@@ -373,3 +373,26 @@ take unclassified bayes fasta and put it into megablast
 scrub through the hits for each sequence
 i'm really not sure what the best way to do this is
 everything i tried is really cumbersome
+
+## 10/11/25
+
+Dear Diary,
+
+It's been a while
+
+taking notes on how i install CRABS here because it was kind of a fucking nightmare
+tried installing it through conda, was broken (stupid fucking package manager)
+
+made conda venv for crabs at python=3.11.7, installed all packages at their specified version on github (except cutadapt which gave me problems so i just installed the most recent version)
+cloned CRABS github into Software/ and made a symlink to the executable
+sudo ln -s /home/bmogi/Software/reference_database_creator/crabs /usr/local/bin/crabs
+
+^ this was an ordeal but we got there
+
+Yesterday,
+I found a pdf of all wisconsin verts (from 2000, a but outdated), i processed it through python and extraced the genus and species of all identified native verts in wisconsin (pretty proud of this). this is the input for making the crabs db
+
+so i didn't have to do this all over again, i made a yaml file from my venv using
+conda export > crabs-env.yaml
+
+Here's how i built the database:
